@@ -268,7 +268,7 @@ export default function Home() {
             >
               <option value="Pribadi">Pribadi</option>
               <option value="Pekerjaan">Pekerjaan</option>
-              <option value="Side Hustle">Side Hustle</option>
+              <option value="SideHustle">Side Hustle</option>
             </select>
           </div>
 
@@ -363,7 +363,7 @@ export default function Home() {
           />
         </div>
         <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
-          {['All', 'Pribadi', 'Pekerjaan', 'Side Hustle'].map((cat) => (
+          {['All', 'Pribadi', 'Pekerjaan', 'SideHustle'].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategoryFilter(cat)}
@@ -380,7 +380,7 @@ export default function Home() {
                 color: selectedCategoryFilter === cat ? '#f5f5f4' : '#57534e'
               }}
             >
-              {cat}
+              {cat === 'SideHustle' ? 'Side Hustle' : cat}
             </button>
           ))}
         </div>
@@ -430,7 +430,7 @@ export default function Home() {
                       >
                         <option value="Pribadi">Pribadi</option>
                         <option value="Pekerjaan">Pekerjaan</option>
-                        <option value="Side Hustle">Side Hustle</option>
+                        <option value="SideHustle">Side Hustle</option>
                       </select>
                       <input
                         type="date"
@@ -510,7 +510,7 @@ export default function Home() {
                         </h3>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
                           <span style={{ fontSize: '10px', backgroundColor: '#eef5ef', color: '#3f6212', border: '1px solid #d8e3d8', padding: '4px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                            <Tag size={10} style={{ color: '#65a30d' }} /> {todo.category}
+                            <Tag size={10} style={{ color: '#65a30d' }} /> {todo.category === 'SideHustle' ? 'Side Hustle' : todo.category}
                           </span>
                           {todo.due_date && (
                             <span style={{ fontSize: '10px', backgroundColor: '#fdfaf5', color: '#78716c', border: '1px solid #e6decb', padding: '4px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
