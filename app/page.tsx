@@ -35,7 +35,7 @@ export default function Home() {
   
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [category, setCategory] = useState<string>('Pribadi');
+  const [category, setCategory] = useState<any>('Pribadi');
   const [dueDate, setDueDate] = useState('');
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
@@ -44,7 +44,7 @@ export default function Home() {
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editPriority, setEditPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [editCategory, setEditCategory] = useState<string>('Pribadi');
+  const [editCategory, setEditCategory] = useState<any>('Pribadi');
   const [editDueDate, setEditDueDate] = useState('');
   const [editSubtasks, setEditSubtasks] = useState<Subtask[]>([]);
   const [editNewSubtaskTitle, setEditNewSubtaskTitle] = useState('');
@@ -79,12 +79,15 @@ export default function Home() {
     setLoading(true);
 
     try {
+      // Membersihkan spasi pada kategori untuk menghindari error enum database
+      const cleanCategory = category === 'Side Hustle' ? 'SideHustle' : category;
+
       const { error } = await supabase.from('todos').insert([
         {
           title: title.trim(),
           frequency: activeTab,
           priority,
-          category,
+          category: cleanCategory,
           due_date: dueDate || null,
           subtasks,
         },
@@ -133,7 +136,7 @@ export default function Home() {
     setEditingTodoId(todo.id);
     setEditTitle(todo.title);
     setEditPriority(todo.priority);
-    setEditCategory(todo.category);
+    setEditCategory(todo.category === 'SideHustle' ? 'Side Hustle' : todo.category);
     setEditDueDate(todo.due_date || '');
     setEditSubtasks(todo.subtasks || []);
   };
@@ -158,12 +161,14 @@ export default function Home() {
   const saveEditedTodo = async (id: string) => {
     if (!editTitle.trim()) return;
 
+    const cleanEditCategory = editCategory === 'Side Hustle' ? 'SideHustle' : editCategory;
+
     const { error } = await supabase
       .from('todos')
       .update({
         title: editTitle,
         priority: editPriority,
-        category: editCategory,
+        category: cleanEditCategory,
         due_date: editDueDate || null,
         subtasks: editSubtasks,
       })
@@ -187,7 +192,8 @@ export default function Home() {
   };
 
   const filteredTodos = todos.filter((todo) => {
-    const matchesCategory = selectedCategoryFilter === 'All' || todo.category === selectedCategoryFilter;
+    const formattedTodoCategory = todo.category === 'SideHustle' ? 'Side Hustle' : todo.category;
+    const matchesCategory = selectedCategoryFilter === 'All' || formattedTodoCategory === selectedCategoryFilter;
     const matchesSearch = todo.title.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
@@ -268,7 +274,7 @@ export default function Home() {
             >
               <option value="Pribadi">Pribadi</option>
               <option value="Pekerjaan">Pekerjaan</option>
-              <option value="SideHustle">Side Hustle</option>
+              <option value="Side Hustle">Side Hustle</option>
             </select>
           </div>
 
@@ -363,7 +369,7 @@ export default function Home() {
           />
         </div>
         <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
-          {['All', 'Pribadi', 'Pekerjaan', 'SideHustle'].map((cat) => (
+          {['All', 'Pribadi', 'Pekerjaan', 'Side Hustle'].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategoryFilter(cat)}
@@ -380,7 +386,7 @@ export default function Home() {
                 color: selectedCategoryFilter === cat ? '#f5f5f4' : '#57534e'
               }}
             >
-              {cat === 'SideHustle' ? 'Side Hustle' : cat}
+              {cat}
             </button>
           ))}
         </div>
@@ -396,6 +402,7 @@ export default function Home() {
           filteredTodos.map((todo) => {
             const isEditing = editingTodoId === todo.id;
             const deadlineStatus = !todo.is_completed ? getDeadlineStatus(todo.due_date) : null;
+            const displayCategory = todo.category === 'SideHustle' ? 'Side Hustle' : todo.category;
 
             return (
               <div
@@ -430,7 +437,7 @@ export default function Home() {
                       >
                         <option value="Pribadi">Pribadi</option>
                         <option value="Pekerjaan">Pekerjaan</option>
-                        <option value="SideHustle">Side Hustle</option>
+                        <option value="Side Hustle">Side Hustle</option>
                       </select>
                       <input
                         type="date"
@@ -510,7 +517,7 @@ export default function Home() {
                         </h3>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
                           <span style={{ fontSize: '10px', backgroundColor: '#eef5ef', color: '#3f6212', border: '1px solid #d8e3d8', padding: '4px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                            <Tag size={10} style={{ color: '#65a30d' }} /> {todo.category === 'SideHustle' ? 'Side Hustle' : todo.category}
+                            <Tag size={10} style={{ color: '#65a30d' }} /> {displayCategory}
                           </span>
                           {todo.due_date && (
                             <span style={{ fontSize: '10px', backgroundColor: '#fdfaf5', color: '#78716c', border: '1px solid #e6decb', padding: '4px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
