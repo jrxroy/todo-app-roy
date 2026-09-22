@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// Inisialisasi Supabase client (sesuaikan jika file kamu menggunakan konfigurasi terpisah)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -19,9 +18,6 @@ export default function Home() {
   const [newTask, setNewTask] = useState("");
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setDarkMode(true);
-    }
     fetchTodos();
   }, []);
 
@@ -51,49 +47,46 @@ export default function Home() {
   };
 
   return (
-    <div className={`${darkMode ? "dark bg-[#0a0a0a] text-[#ededed]" : "bg-white text-zinc-900"} min-h-screen transition-colors duration-200`}>
-      <main className="max-w-xl mx-auto p-6">
-        {/* Header & Tombol Dark Mode */}
+    <div className={darkMode ? "dark bg-[#0a0a0a] text-[#ededed] min-h-screen" : "bg-white text-zinc-900 min-h-screen"}>
+      <main className="max-w-xl mx-auto px-6 py-12">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">To Do List Roy</h1>
+          <h1 className="text-2xl font-bold tracking-tight">To Do List Roy</h1>
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="px-3 py-1.5 text-xs font-medium border border-zinc-700 rounded-md hover:bg-zinc-800 hover:text-white transition-all"
+            className="px-3 py-1.5 text-xs font-medium border border-zinc-500 rounded-md transition hover:opacity-80"
           >
             {darkMode ? "Light Mode" : "Dark Mode"}
           </button>
         </div>
 
-        {/* Form Input Tugas */}
         <form onSubmit={addTodo} className="flex gap-2 mb-6">
           <input
             type="text"
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
             placeholder="Tambah tugas baru..."
-            className="flex-1 px-3 py-2 text-sm border border-zinc-700 rounded-md bg-transparent focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className="flex-1 px-3 py-2 text-sm border border-zinc-400 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-zinc-600"
           />
           <button
             type="submit"
-            className="px-4 py-2 text-sm font-medium bg-zinc-800 text-white rounded-md hover:bg-zinc-700 transition-all"
+            className="px-4 py-2 text-sm font-medium bg-zinc-800 text-white rounded-md hover:bg-zinc-700 transition"
           >
             Simpan
           </button>
         </form>
 
-        {/* Daftar Tugas */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {todos.map((todo) => (
             <div
               key={todo.id}
-              className="flex justify-between items-center p-3 border border-zinc-800 rounded-md bg-zinc-900/40"
+              className="flex justify-between items-center p-3 border border-zinc-300 dark:border-zinc-800 rounded-md bg-zinc-50 dark:bg-zinc-900/50"
             >
-              <span className={`text-sm ${todo.is_completed ? "line-through text-zinc-500" : ""}`}>
+              <span className={`text-sm ${todo.is_completed ? "line-through text-zinc-400" : ""}`}>
                 {todo.task}
               </span>
               <button
                 onClick={() => deleteTodo(todo.id)}
-                className="text-xs text-red-400 hover:text-red-300 px-2 py-1"
+                className="text-xs text-red-500 hover:text-red-400 px-2 py-1"
               >
                 Hapus
               </button>
