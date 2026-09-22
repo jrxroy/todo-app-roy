@@ -21,7 +21,7 @@ interface Todo {
   title: string;
   frequency: 'daily' | 'weekly' | 'monthly';
   priority: 'low' | 'medium' | 'high';
-  category: 'Pekerjaan' | 'Side Hustle' | 'Pribadi';
+  category: string;
   is_completed: boolean;
   due_date: string;
   subtasks: Subtask[];
@@ -35,7 +35,7 @@ export default function Home() {
   
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [category, setCategory] = useState<'Pekerjaan' | 'Side Hustle' | 'Pribadi'>('Pribadi');
+  const [category, setCategory] = useState<string>('Pribadi');
   const [dueDate, setDueDate] = useState('');
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
@@ -44,7 +44,7 @@ export default function Home() {
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editPriority, setEditPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [editCategory, setEditCategory] = useState<'Pekerjaan' | 'Side Hustle' | 'Pribadi'>('Pribadi');
+  const [editCategory, setEditCategory] = useState<string>('Pribadi');
   const [editDueDate, setEditDueDate] = useState('');
   const [editSubtasks, setEditSubtasks] = useState<Subtask[]>([]);
   const [editNewSubtaskTitle, setEditNewSubtaskTitle] = useState('');
@@ -263,12 +263,12 @@ export default function Home() {
             <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, color: '#78716c', display: 'block', marginBottom: '4px' }}>Kategori:</label>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value as any)}
+              onChange={(e) => setCategory(e.target.value)}
               style={{ width: '100%', backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '12px', padding: '10px', fontSize: '12px', color: '#292524', outline: 'none' }}
             >
               <option value="Pribadi">Pribadi</option>
-              <option value="Pekerjaan">Pekerjaan (Kantor)</option>
-              <option value="Side Hustle">Side Hustle (Penghasilan Tambahan)</option>
+              <option value="Pekerjaan">Pekerjaan</option>
+              <option value="Side Hustle">Side Hustle</option>
             </select>
           </div>
 
@@ -425,12 +425,12 @@ export default function Home() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                       <select
                         value={editCategory}
-                        onChange={(e) => setEditCategory(e.target.value as any)}
+                        onChange={(e) => setEditCategory(e.target.value)}
                         style={{ backgroundColor: '#fcfaf7', border: '1px solid #dccfb8', borderRadius: '10px', padding: '8px', fontSize: '12px', color: '#292524', outline: 'none' }}
                       >
                         <option value="Pribadi">Pribadi</option>
-                        <option value="Pekerjaan">Pekerjaan (Kantor)</option>
-                        <option value="Side Hustle">Side Hustle (Penghasilan Tambahan)</option>
+                        <option value="Pekerjaan">Pekerjaan</option>
+                        <option value="Side Hustle">Side Hustle</option>
                       </select>
                       <input
                         type="date"
