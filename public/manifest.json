@@ -1,0 +1,16 @@
+{
+  "name": "To do List Roy",
+  "short_name": "PlannerRoy",
+  "description": "Aplikasi To-Do List & Side Hustle Manager",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fcfaf7",
+  "theme_color": "#292524",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
