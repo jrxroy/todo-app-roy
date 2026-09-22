@@ -40,6 +40,12 @@ export default function Home() {
     }
   };
 
+  const toggleComplete = async (id: number, currentStatus: boolean) => {
+    const { error } = await supabase.from("todos").update({ is_completed: !currentStatus }).eq("id", id);
+    if (error) console.error("Error updating todo:", error);
+    else fetchTodos();
+  };
+
   const deleteTodo = async (id: number) => {
     const { error } = await supabase.from("todos").delete().eq("id", id);
     if (error) console.error("Error deleting todo:", error);
@@ -81,9 +87,17 @@ export default function Home() {
               key={todo.id}
               className="flex justify-between items-center p-3 border border-zinc-300 dark:border-zinc-800 rounded-md bg-zinc-50 dark:bg-zinc-900/50"
             >
-              <span className={`text-sm ${todo.is_completed ? "line-through text-zinc-400" : ""}`}>
-                {todo.task}
-              </span>
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={todo.is_completed}
+                  onChange={() => toggleComplete(todo.id, todo.is_completed)}
+                  className="w-4 h-4 cursor-pointer accent-zinc-700"
+                />
+                <span className={`text-sm ${todo.is_completed ? "line-through text-zinc-400" : ""}`}>
+                  {todo.task}
+                </span>
+              </div>
               <button
                 onClick={() => deleteTodo(todo.id)}
                 className="text-xs text-red-500 hover:text-red-400 px-2 py-1"
