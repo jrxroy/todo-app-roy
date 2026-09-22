@@ -78,25 +78,32 @@ export default function Home() {
     if (!title.trim()) return;
     setLoading(true);
 
-    const { error } = await supabase.from('todos').insert([
-      {
-        title,
-        frequency: activeTab,
-        priority,
-        category,
-        due_date: dueDate || null,
-        subtasks,
-        user_id: '00000000-0000-0000-0000-000000000000',
-      },
-    ]);
+    try {
+      const { error } = await supabase.from('todos').insert([
+        {
+          title: title.trim(),
+          frequency: activeTab,
+          priority,
+          category,
+          due_date: dueDate || null,
+          subtasks,
+        },
+      ]);
 
-    if (!error) {
-      setTitle('');
-      setDueDate('');
-      setSubtasks([]);
-      fetchTodos();
+      if (error) {
+        console.error('Error Supabase:', error.message);
+        alert('Gagal menyimpan: ' + error.message);
+      } else {
+        setTitle('');
+        setDueDate('');
+        setSubtasks([]);
+        fetchTodos();
+      }
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const toggleTodo = async (id: string, currentStatus: boolean) => {
