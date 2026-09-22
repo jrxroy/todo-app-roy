@@ -32,7 +32,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [darkMode, setDarkMode] = useState<boolean>(false);
   
   // State Form Tambah
   const [title, setTitle] = useState('');
@@ -175,9 +174,9 @@ export default function Home() {
     if (!dateStr) return null;
     const today = new Date().toISOString().split('T')[0];
     if (dateStr < today) {
-      return { label: 'Overdue', className: 'bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-400 border-amber-300 dark:border-amber-800 font-bold' };
+      return { label: 'Overdue', className: 'bg-amber-100 text-amber-900 border-amber-300 font-bold' };
     } else if (dateStr === today) {
-      return { label: 'Hari Ini', className: 'bg-stone-800 dark:bg-stone-200 text-stone-100 dark:text-stone-900 border-stone-700 font-bold' };
+      return { label: 'Hari Ini', className: 'bg-stone-800 text-stone-100 border-stone-700 font-bold' };
     }
     return null;
   };
@@ -192,52 +191,46 @@ export default function Home() {
   const progressPercentage = todos.length > 0 ? Math.round((completedCount / todos.length) * 100) : 0;
 
   return (
-    <main className={`min-h-screen transition-colors duration-200 ${darkMode ? 'dark bg-[#0a0a0a] text-[#ededed]' : 'bg-[#fcfaf7] text-stone-800'} p-4 sm:p-8 max-w-xl mx-auto font-sans selection:bg-stone-300 selection:text-stone-900`}>
-      {/* Header Earth Tone dengan Tombol Dark Mode */}
-      <header className="mb-8 flex justify-between items-center bg-[#f4efe6] dark:bg-zinc-900 p-5 rounded-2xl border border-[#e6decb] dark:border-zinc-800 shadow-sm">
+    <main className="min-h-screen bg-[#fcfaf7] text-stone-800 p-4 sm:p-8 max-w-xl mx-auto font-sans selection:bg-stone-300 selection:text-stone-900">
+      {/* Header Earth Tone */}
+      <header className="mb-8 flex justify-between items-center bg-[#f4efe6] p-5 rounded-2xl border border-[#e6decb] shadow-sm">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 bg-[#e9e2d0] dark:bg-zinc-800 rounded-lg text-stone-700 dark:text-stone-300 border border-[#dccfb8] dark:border-zinc-700">
+            <span className="p-1.5 bg-[#e9e2d0] rounded-lg text-stone-700 border border-[#dccfb8]">
               <Compass size={16} />
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-[#ededed]">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900">
               To do List Roy
             </h1>
           </div>
-          <p className="text-xs text-stone-500 dark:text-stone-400 font-medium tracking-wide">Pekerjaan, Side Hustle & Fokus Pribadi</p>
+          <p className="text-xs text-stone-500 font-medium tracking-wide">Pekerjaan, Side Hustle & Fokus Pribadi</p>
         </div>
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="px-3.5 py-2 text-xs font-medium border border-[#dccfb8] dark:border-zinc-700 rounded-xl bg-[#fcfaf7] dark:bg-zinc-800 text-stone-700 dark:text-stone-300 hover:bg-[#e9e2d0] dark:hover:bg-zinc-700 transition-colors shadow-sm"
-        >
-          {darkMode ? '☀️ Light' : '🌙 Dark'}
-        </button>
       </header>
 
       {/* Dashboard Statistik Progres */}
-      <div className="bg-[#f4efe6] dark:bg-zinc-900 border border-[#e6decb] dark:border-zinc-800 p-4 rounded-2xl mb-6 shadow-sm">
+      <div className="bg-[#f4efe6] border border-[#e6decb] p-4 rounded-2xl mb-6 shadow-sm">
         <div className="flex justify-between items-center mb-2.5 text-xs font-semibold">
-          <span className="text-stone-500 dark:text-stone-400">Pencapaian Periode Ini</span>
-          <span className="text-stone-700 dark:text-stone-300 font-bold">{completedCount} dari {todos.length} selesai ({progressPercentage}%)</span>
+          <span className="text-stone-500">Pencapaian Periode Ini</span>
+          <span className="text-stone-700 font-bold">{completedCount} dari {todos.length} selesai ({progressPercentage}%)</span>
         </div>
-        <div className="w-full bg-[#e9e2d0] dark:bg-zinc-800 h-2 rounded-full overflow-hidden border border-[#dccfb8] dark:border-zinc-700 p-0.5">
+        <div className="w-full bg-[#e9e2d0] h-2 rounded-full overflow-hidden border border-[#dccfb8] p-0.5">
           <div 
-            className="bg-stone-700 dark:bg-stone-300 h-full rounded-full transition-all duration-500" 
+            className="bg-stone-700 h-full rounded-full transition-all duration-500" 
             style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>
       </div>
 
       {/* Navigasi Tab */}
-      <div className="grid grid-cols-3 gap-2 bg-[#f4efe6] dark:bg-zinc-900 p-1.5 rounded-2xl mb-6 border border-[#e6decb] dark:border-zinc-800 shadow-sm">
+      <div className="grid grid-cols-3 gap-2 bg-[#f4efe6] p-1.5 rounded-2xl mb-6 border border-[#e6decb] shadow-sm">
         {(['daily', 'weekly', 'monthly'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`py-2 text-xs font-bold rounded-xl capitalize transition-all duration-200 ${
               activeTab === tab
-                ? 'bg-stone-800 dark:bg-stone-200 text-stone-100 dark:text-stone-900 shadow-sm'
-                : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-[#e9e2d0]/50 dark:hover:bg-zinc-800'
+                ? 'bg-stone-800 text-stone-100 shadow-sm'
+                : 'text-stone-500 hover:text-stone-900 hover:bg-[#e9e2d0]/50'
             }`}
           >
             {tab === 'daily' ? 'Harian' : tab === 'weekly' ? 'Mingguan' : 'Bulanan'}
@@ -246,22 +239,22 @@ export default function Home() {
       </div>
 
       {/* Form Input Tugas Baru */}
-      <form onSubmit={addTodo} className="bg-[#f4efe6] dark:bg-zinc-900 border border-[#e6decb] dark:border-zinc-800 p-4 sm:p-5 rounded-2xl mb-6 flex flex-col gap-3.5 shadow-sm">
+      <form onSubmit={addTodo} className="bg-[#f4efe6] border border-[#e6decb] p-4 sm:p-5 rounded-2xl mb-6 flex flex-col gap-3.5 shadow-sm">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={`Tambah rencana ${activeTab} baru...`}
-          className="bg-[#fcfaf7] dark:bg-zinc-800 border border-[#e2d9c4] dark:border-zinc-700 rounded-xl px-4 py-3 text-sm text-stone-900 dark:text-[#ededed] placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:border-stone-500 transition-all"
+          className="bg-[#fcfaf7] border border-[#e2d9c4] rounded-xl px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-stone-500 transition-all"
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="text-[10px] uppercase tracking-wider font-semibold text-stone-500 dark:text-stone-400 block mb-1">Kategori:</label>
+            <label className="text-[10px] uppercase tracking-wider font-semibold text-stone-500 block mb-1">Kategori:</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as any)}
-              className="w-full bg-[#fcfaf7] dark:bg-zinc-800 border border-[#e2d9c4] dark:border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs text-stone-800 dark:text-stone-200 focus:outline-none focus:border-stone-500 transition-all"
+              className="w-full bg-[#fcfaf7] border border-[#e2d9c4] rounded-xl px-3.5 py-2.5 text-xs text-stone-800 focus:outline-none focus:border-stone-500 transition-all"
             >
               <option value="Pribadi">Pribadi</option>
               <option value="Pekerjaan">Pekerjaan (Kantor)</option>
@@ -270,19 +263,19 @@ export default function Home() {
           </div>
 
           <div>
-            <label className="text-[10px] uppercase tracking-wider font-semibold text-stone-500 dark:text-stone-400 block mb-1">Deadline:</label>
+            <label className="text-[10px] uppercase tracking-wider font-semibold text-stone-500 block mb-1">Deadline:</label>
             <input
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full bg-[#fcfaf7] dark:bg-zinc-800 border border-[#e2d9c4] dark:border-zinc-700 rounded-xl px-3.5 py-2 text-xs text-stone-800 dark:text-stone-200 focus:outline-none focus:border-stone-500 transition-all"
+              className="w-full bg-[#fcfaf7] border border-[#e2d9c4] rounded-xl px-3.5 py-2 text-xs text-stone-800 focus:outline-none focus:border-stone-500 transition-all"
             />
           </div>
         </div>
 
         {/* Prioritas */}
         <div className="flex items-center justify-between pt-1 px-1">
-          <span className="text-xs text-stone-500 dark:text-stone-400 font-medium">Prioritas:</span>
+          <span className="text-xs text-stone-500 font-medium">Prioritas:</span>
           <div className="flex gap-2">
             {(['low', 'medium', 'high'] as const).map((p) => (
               <button
@@ -291,8 +284,8 @@ export default function Home() {
                 onClick={() => setPriority(p)}
                 className={`text-[10px] px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider transition-all border ${
                   priority === p
-                    ? 'bg-stone-800 dark:bg-stone-200 border-stone-800 dark:border-stone-200 text-stone-100 dark:text-stone-900'
-                    : 'border-[#e2d9c4] dark:border-zinc-700 text-stone-500 dark:text-stone-400 bg-[#fcfaf7] dark:bg-zinc-800 hover:border-stone-400 hover:text-stone-800'
+                    ? 'bg-stone-800 border-stone-800 text-stone-100'
+                    : 'border-[#e2d9c4] text-stone-500 bg-[#fcfaf7] hover:border-stone-400 hover:text-stone-800'
                 }`}
               >
                 {p}
@@ -302,29 +295,29 @@ export default function Home() {
         </div>
 
         {/* Sub-tugas Input */}
-        <div className="border-t border-[#e6decb] dark:border-zinc-800 pt-3.5">
-          <label className="text-[10px] uppercase tracking-wider font-semibold text-stone-500 dark:text-stone-400 block mb-1.5">Sub-tugas (Langkah Kecil):</label>
+        <div className="border-t border-[#e6decb] pt-3.5">
+          <label className="text-[10px] uppercase tracking-wider font-semibold text-stone-500 block mb-1.5">Sub-tugas (Langkah Kecil):</label>
           <div className="flex gap-2 mb-2.5">
             <input
               type="text"
               value={newSubtaskTitle}
               onChange={(e) => setNewSubtaskTitle(e.target.value)}
               placeholder="Tambah checklist kecil..."
-              className="flex-1 bg-[#fcfaf7] dark:bg-zinc-800 border border-[#e2d9c4] dark:border-zinc-700 rounded-xl px-3.5 py-2 text-xs text-stone-900 dark:text-[#ededed] placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:border-stone-500"
+              className="flex-1 bg-[#fcfaf7] border border-[#e2d9c4] rounded-xl px-3.5 py-2 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-stone-500"
             />
-            <button type="button" onClick={addSubtask} className="bg-[#e9e2d0] dark:bg-zinc-800 hover:bg-[#ded5c0] dark:hover:bg-zinc-700 text-stone-700 dark:text-stone-300 border border-[#dccfb8] dark:border-zinc-700 text-xs px-4 py-2 rounded-xl font-semibold transition-all">
+            <button type="button" onClick={addSubtask} className="bg-[#e9e2d0] hover:bg-[#ded5c0] text-stone-700 border border-[#dccfb8] text-xs px-4 py-2 rounded-xl font-semibold transition-all">
               Tambah
             </button>
           </div>
           {subtasks.length > 0 && (
             <div className="space-y-1.5 mb-2">
               {subtasks.map((s) => (
-                <div key={s.id} className="flex justify-between items-center text-xs bg-[#fcfaf7] dark:bg-zinc-800 px-3 py-1.5 rounded-xl border border-[#e2d9c4] dark:border-zinc-700 text-stone-700 dark:text-stone-300">
+                <div key={s.id} className="flex justify-between items-center text-xs bg-[#fcfaf7] px-3 py-1.5 rounded-xl border border-[#e2d9c4] text-stone-700">
                   <span className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-stone-500 dark:bg-stone-400"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-stone-500"></span>
                     {s.title}
                   </span>
-                  <button type="button" onClick={() => removeSubtask(s.id)} className="text-stone-400 dark:text-stone-500 hover:text-stone-900 dark:hover:text-stone-200 transition-colors font-bold px-1">×</button>
+                  <button type="button" onClick={() => removeSubtask(s.id)} className="text-stone-400 hover:text-stone-900 transition-colors font-bold px-1">×</button>
                 </div>
               ))}
             </div>
@@ -334,7 +327,7 @@ export default function Home() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-stone-800 dark:bg-stone-200 hover:bg-stone-900 dark:hover:bg-white text-stone-100 dark:text-stone-900 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-xs tracking-wide uppercase mt-1 shadow-sm"
+          className="w-full bg-stone-800 hover:bg-stone-900 text-stone-100 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-xs tracking-wide uppercase mt-1 shadow-sm"
         >
           <Plus size={16} /> Simpan Tugas Baru
         </button>
@@ -349,7 +342,7 @@ export default function Home() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari tugas..."
-            className="w-full bg-[#f4efe6] dark:bg-zinc-900 border border-[#e6decb] dark:border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-stone-800 dark:text-[#ededed] placeholder:text-stone-400 focus:outline-none focus:border-stone-500 shadow-sm"
+            className="w-full bg-[#f4efe6] border border-[#e6decb] rounded-xl pl-10 pr-4 py-2.5 text-xs text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-stone-500 shadow-sm"
           />
         </div>
         <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">
@@ -359,8 +352,8 @@ export default function Home() {
               onClick={() => setSelectedCategoryFilter(cat)}
               className={`text-[11px] font-medium px-3 py-2 rounded-xl whitespace-nowrap transition-all border ${
                 selectedCategoryFilter === cat
-                  ? 'bg-stone-800 dark:bg-stone-200 border-stone-800 dark:border-stone-200 text-stone-100 dark:text-stone-900 font-bold shadow-sm'
-                  : 'bg-[#f4efe6] dark:bg-zinc-900 border-[#e6decb] dark:border-zinc-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+                  ? 'bg-stone-800 border-stone-800 text-stone-100 font-bold shadow-sm'
+                  : 'bg-[#f4efe6] border-[#e6decb] text-stone-600 hover:text-stone-900'
               }`}
             >
               {cat}
@@ -372,7 +365,7 @@ export default function Home() {
       {/* Daftar To-Do */}
       <div className="space-y-3.5">
         {filteredTodos.length === 0 ? (
-          <div className="text-center py-16 text-stone-400 dark:text-stone-500 text-xs font-medium tracking-wide bg-[#f4efe6] dark:bg-zinc-900 rounded-2xl border border-[#e6decb] dark:border-zinc-800 shadow-sm">
+          <div className="text-center py-16 text-stone-400 text-xs font-medium tracking-wide bg-[#f4efe6] rounded-2xl border border-[#e6decb] shadow-sm">
             Tidak ada tugas yang ditemukan.
           </div>
         ) : (
@@ -385,28 +378,28 @@ export default function Home() {
                 key={todo.id}
                 className={`p-4 sm:p-5 rounded-2xl border transition-all shadow-sm ${
                   todo.is_completed
-                    ? 'bg-[#f7f5ef]/60 dark:bg-zinc-900/30 border-[#e6decb] dark:border-zinc-800 text-stone-400 dark:text-stone-600 line-through'
-                    : 'bg-[#f4efe6] dark:bg-zinc-900 border-[#e6decb] dark:border-zinc-800 text-stone-800 dark:text-[#ededed] hover:border-[#d9cca8] dark:hover:border-zinc-700'
+                    ? 'bg-[#f7f5ef]/60 border-[#e6decb] text-stone-400 line-through'
+                    : 'bg-[#f4efe6] border-[#e6decb] text-stone-800 hover:border-[#d9cca8]'
                 }`}
               >
                 {/* JIKA DALAM MODE EDIT */}
                 {isEditing ? (
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">Edit Tugas</span>
-                      <button onClick={cancelEditing} className="text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"><X size={16} /></button>
+                      <span className="text-xs font-bold text-stone-900 uppercase tracking-wider">Edit Tugas</span>
+                      <button onClick={cancelEditing} className="text-stone-400 hover:text-stone-900"><X size={16} /></button>
                     </div>
                     <input
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="w-full bg-[#fcfaf7] dark:bg-zinc-800 border border-[#dccfb8] dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-stone-900 dark:text-[#ededed] focus:outline-none"
+                      className="w-full bg-[#fcfaf7] border border-[#dccfb8] rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none"
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <select
                         value={editCategory}
                         onChange={(e) => setEditCategory(e.target.value as any)}
-                        className="bg-[#fcfaf7] dark:bg-zinc-800 border border-[#dccfb8] dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-stone-800 dark:text-stone-200 focus:outline-none"
+                        className="bg-[#fcfaf7] border border-[#dccfb8] rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-none"
                       >
                         <option value="Pribadi">Pribadi</option>
                         <option value="Pekerjaan">Pekerjaan (Kantor)</option>
@@ -416,12 +409,12 @@ export default function Home() {
                         type="date"
                         value={editDueDate}
                         onChange={(e) => setEditDueDate(e.target.value)}
-                        className="bg-[#fcfaf7] dark:bg-zinc-800 border border-[#dccfb8] dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-stone-800 dark:text-stone-200 focus:outline-none"
+                        className="bg-[#fcfaf7] border border-[#dccfb8] rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-none"
                       />
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-stone-500 dark:text-stone-400">Prioritas:</span>
+                      <span className="text-[11px] text-stone-500">Prioritas:</span>
                       <div className="flex gap-1.5">
                         {(['low', 'medium', 'high'] as const).map((p) => (
                           <button
@@ -429,7 +422,7 @@ export default function Home() {
                             type="button"
                             onClick={() => setEditPriority(p)}
                             className={`text-[10px] px-2.5 py-1 rounded-lg font-bold uppercase border ${
-                              editPriority === p ? 'bg-stone-800 dark:bg-stone-200 border-stone-800 dark:border-stone-200 text-stone-100 dark:text-stone-900' : 'border-[#dccfb8] dark:border-zinc-700 text-stone-600 dark:text-stone-400 bg-[#fcfaf7] dark:bg-zinc-800'
+                              editPriority === p ? 'bg-stone-800 border-stone-800 text-stone-100' : 'border-[#dccfb8] text-stone-600 bg-[#fcfaf7]'
                             }`}
                           >
                             {p}
@@ -438,22 +431,22 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="border-t border-[#e6decb] dark:border-zinc-800 pt-2">
-                      <label className="text-[10px] text-stone-500 dark:text-stone-400 block mb-1">Sub-tugas:</label>
+                    <div className="border-t border-[#e6decb] pt-2">
+                      <label className="text-[10px] text-stone-500 block mb-1">Sub-tugas:</label>
                       <div className="flex gap-2 mb-2">
                         <input
                           type="text"
                           value={editNewSubtaskTitle}
                           onChange={(e) => setEditNewSubtaskTitle(e.target.value)}
                           placeholder="Tambah sub-tugas..."
-                          className="flex-1 bg-[#fcfaf7] dark:bg-zinc-800 border border-[#dccfb8] dark:border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-stone-900 dark:text-[#ededed]"
+                          className="flex-1 bg-[#fcfaf7] border border-[#dccfb8] rounded-xl px-3 py-1.5 text-xs text-stone-900"
                         />
-                        <button type="button" onClick={addEditSubtask} className="bg-[#e9e2d0] dark:bg-zinc-800 text-xs px-3 py-1.5 rounded-xl font-medium text-stone-700 dark:text-stone-300">Tambah</button>
+                        <button type="button" onClick={addEditSubtask} className="bg-[#e9e2d0] text-xs px-3 py-1.5 rounded-xl font-medium text-stone-700">Tambah</button>
                       </div>
                       {editSubtasks.map((s) => (
-                        <div key={s.id} className="flex justify-between items-center text-xs bg-[#fcfaf7] dark:bg-zinc-800 px-2.5 py-1 rounded-lg mb-1 border border-[#dccfb8] dark:border-zinc-700 text-stone-700 dark:text-stone-300">
+                        <div key={s.id} className="flex justify-between items-center text-xs bg-[#fcfaf7] px-2.5 py-1 rounded-lg mb-1 border border-[#dccfb8] text-stone-700">
                           <span>- {s.title}</span>
-                          <button type="button" onClick={() => removeEditSubtask(s.id)} className="text-stone-400 hover:text-stone-900 dark:hover:text-stone-200">×</button>
+                          <button type="button" onClick={() => removeEditSubtask(s.id)} className="text-stone-400 hover:text-stone-900">×</button>
                         </div>
                       ))}
                     </div>
@@ -461,13 +454,13 @@ export default function Home() {
                     <div className="flex gap-2 pt-2">
                       <button
                         onClick={() => saveEditedTodo(todo.id)}
-                        className="flex-1 bg-stone-800 dark:bg-stone-200 hover:bg-stone-900 dark:hover:bg-white text-stone-100 dark:text-stone-900 py-2 rounded-xl text-xs font-bold"
+                        className="flex-1 bg-stone-800 hover:bg-stone-900 text-stone-100 py-2 rounded-xl text-xs font-bold"
                       >
                         Simpan Perubahan
                       </button>
                       <button
                         onClick={cancelEditing}
-                        className="bg-[#e9e2d0] dark:bg-zinc-800 hover:bg-[#ded5c0] dark:hover:bg-zinc-700 text-stone-700 dark:text-stone-300 px-4 py-2 rounded-xl text-xs font-semibold"
+                        className="bg-[#e9e2d0] hover:bg-[#ded5c0] text-stone-700 px-4 py-2 rounded-xl text-xs font-semibold"
                       >
                         Batal
                       </button>
@@ -478,21 +471,21 @@ export default function Home() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3.5 flex-1 cursor-pointer pt-0.5" onClick={() => toggleTodo(todo.id, todo.is_completed)}>
                       {todo.is_completed ? (
-                        <CheckCircle2 className="text-stone-500 dark:text-stone-500 shrink-0 mt-0.5" size={20} />
+                        <CheckCircle2 className="text-stone-500 shrink-0 mt-0.5" size={20} />
                       ) : (
-                        <Circle className="text-stone-400 dark:text-stone-500 shrink-0 mt-0.5 hover:text-stone-600 dark:hover:text-stone-300 transition-colors" size={20} />
+                        <Circle className="text-stone-400 shrink-0 mt-0.5 hover:text-stone-600 transition-colors" size={20} />
                       )}
                       <div>
-                        <h3 className={`text-sm font-semibold tracking-wide ${todo.is_completed ? 'text-stone-400 dark:text-stone-600' : 'text-stone-900 dark:text-[#ededed]'}`}>
+                        <h3 className={`text-sm font-semibold tracking-wide ${todo.is_completed ? 'text-stone-400' : 'text-stone-900'}`}>
                           {todo.title}
                         </h3>
                         <div className="flex flex-wrap gap-2 mt-2.5">
-                          <span className="text-[10px] bg-[#eef5ef] dark:bg-zinc-800 text-stone-700 dark:text-stone-300 border border-[#d8e3d8] dark:border-zinc-700 px-2.5 py-1 rounded-lg flex items-center gap-1 font-medium">
-                            <Tag size={10} className="text-stone-500 dark:text-stone-400" /> {todo.category}
+                          <span className="text-[10px] bg-[#eef5ef] text-stone-700 border border-[#d8e3d8] px-2.5 py-1 rounded-lg flex items-center gap-1 font-medium">
+                            <Tag size={10} className="text-stone-500" /> {todo.category}
                           </span>
                           {todo.due_date && (
-                            <span className="text-[10px] bg-[#fdfaf5] dark:bg-zinc-800 text-stone-700 dark:text-stone-300 border border-[#e6decb] dark:border-zinc-700 px-2.5 py-1 rounded-lg flex items-center gap-1 font-medium">
-                              <Calendar size={10} className="text-stone-500 dark:text-stone-400" /> {todo.due_date}
+                            <span className="text-[10px] bg-[#fdfaf5] text-stone-700 border border-[#e6decb] px-2.5 py-1 rounded-lg flex items-center gap-1 font-medium">
+                              <Calendar size={10} className="text-stone-500" /> {todo.due_date}
                             </span>
                           )}
                           {deadlineStatus && (
@@ -505,13 +498,13 @@ export default function Home() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] px-2.5 py-1 rounded-lg font-extrabold uppercase tracking-widest border border-[#e2d9c4] dark:border-zinc-700 bg-[#fcfaf7] dark:bg-zinc-800 text-stone-700 dark:text-stone-300">
+                      <span className="text-[9px] px-2.5 py-1 rounded-lg font-extrabold uppercase tracking-widest border border-[#e2d9c4] bg-[#fcfaf7] text-stone-700">
                         {todo.priority}
                       </span>
-                      <button onClick={() => startEditing(todo)} className="text-stone-400 dark:text-stone-500 hover:text-stone-900 dark:hover:text-stone-200 transition-colors p-1" title="Edit Tugas">
+                      <button onClick={() => startEditing(todo)} className="text-stone-400 hover:text-stone-900 transition-colors p-1" title="Edit Tugas">
                         <Edit3 size={15} />
                       </button>
-                      <button onClick={() => deleteTodo(todo.id)} className="text-stone-400 dark:text-stone-500 hover:text-stone-900 dark:hover:text-stone-200 transition-colors p-1" title="Hapus Tugas">
+                      <button onClick={() => deleteTodo(todo.id)} className="text-stone-400 hover:text-stone-900 transition-colors p-1" title="Hapus Tugas">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -520,10 +513,10 @@ export default function Home() {
 
                 {/* Sub-tugas (Tampilan Normal) */}
                 {!isEditing && todo.subtasks && todo.subtasks.length > 0 && (
-                  <div className="mt-3.5 pt-3.5 border-t border-[#e6decb]/60 dark:border-zinc-800 space-y-1.5 pl-8">
+                  <div className="mt-3.5 pt-3.5 border-t border-[#e6decb]/60 space-y-1.5 pl-8">
                     {todo.subtasks.map((sub) => (
-                      <div key={sub.id} className="text-xs text-stone-600 dark:text-stone-400 flex items-center gap-2.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-stone-400 dark:bg-stone-500"></div>
+                      <div key={sub.id} className="text-xs text-stone-600 flex items-center gap-2.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-stone-400"></div>
                         <span>{sub.title}</span>
                       </div>
                     ))}
