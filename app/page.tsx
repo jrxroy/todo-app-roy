@@ -42,6 +42,7 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('active'); // Default Belum Selesai
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   const [title, setTitle] = useState('');
@@ -260,7 +261,13 @@ export default function Home() {
   const filteredTodos = todos.filter((todo) => {
     const matchesCategory = selectedCategoryFilter === 'All' || todo.category === selectedCategoryFilter;
     const matchesSearch = todo.title.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    
+    const matchesStatus = 
+      statusFilter === 'all' ? true :
+      statusFilter === 'active' ? !todo.is_completed :
+      statusFilter === 'completed' ? todo.is_completed : true;
+
+    return matchesCategory && matchesSearch && matchesStatus;
   });
 
   const completedCount = todos.filter((t) => t.is_completed).length;
@@ -459,7 +466,29 @@ export default function Home() {
             </button>
           </form>
 
+          {/* Filter Status (Default Aktif/Belum Selesai) & Pencarian */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', backgroundColor: '#f4efe6', padding: '4px', borderRadius: '12px', border: '1px solid #e6decb' }}>
+              <button
+                onClick={() => setStatusFilter('active')}
+                style={{ padding: '8px', fontSize: '11px', fontWeight: statusFilter === 'active' ? 'bold' : 500, borderRadius: '8px', border: 'none', cursor: 'pointer', backgroundColor: statusFilter === 'active' ? '#292524' : 'transparent', color: statusFilter === 'active' ? '#f5f5f4' : '#78716c' }}
+              >
+                Belum Selesai
+              </button>
+              <button
+                onClick={() => setStatusFilter('completed')}
+                style={{ padding: '8px', fontSize: '11px', fontWeight: statusFilter === 'completed' ? 'bold' : 500, borderRadius: '8px', border: 'none', cursor: 'pointer', backgroundColor: statusFilter === 'completed' ? '#292524' : 'transparent', color: statusFilter === 'completed' ? '#f5f5f4' : '#78716c' }}
+              >
+                Sudah Selesai
+              </button>
+              <button
+                onClick={() => setStatusFilter('all')}
+                style={{ padding: '8px', fontSize: '11px', fontWeight: statusFilter === 'all' ? 'bold' : 500, borderRadius: '8px', border: 'none', cursor: 'pointer', backgroundColor: statusFilter === 'all' ? '#292524' : 'transparent', color: statusFilter === 'all' ? '#f5f5f4' : '#78716c' }}
+              >
+                Semua
+              </button>
+            </div>
+
             <div style={{ position: 'relative', width: '100%' }}>
               <Search size={16} style={{ position: 'absolute', left: '14px', top: '12px', color: '#a8a29e' }} />
               <input
@@ -543,7 +572,6 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {/* SUB-TUGAS KECIL KEMBALI MUNCUL DI SINI */}
                         {todo.subtasks && todo.subtasks.length > 0 && (
                           <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(230, 222, 203, 0.6)', display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '30px' }}>
                             {todo.subtasks.map((sub) => (
