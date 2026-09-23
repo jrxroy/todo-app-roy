@@ -296,7 +296,7 @@ export default function Home() {
             borderColor: mainTab === 'todo' ? '#292524' : '#e6decb',
             color: mainTab === 'todo' ? '#f5f5f4' : '#78716c',
             display: 'flex',
-            alignItem: 'center',
+            alignItems: 'center',
             justifyContent: 'center',
             gap: '8px'
           }}
@@ -316,7 +316,7 @@ export default function Home() {
             borderColor: mainTab === 'habit' ? '#292524' : '#e6decb',
             color: mainTab === 'habit' ? '#f5f5f4' : '#78716c',
             display: 'flex',
-            alignItem: 'center',
+            alignItems: 'center',
             justifyContent: 'center',
             gap: '8px'
           }}
