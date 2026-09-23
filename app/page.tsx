@@ -32,7 +32,7 @@ interface Habit {
   title: string;
   category: string;
   frequency_type: 'daily' | 'weekly' | 'monthly';
-  completed_dates: string[]; // Menyimpan daftar tanggal string 'YYYY-MM-DD' yang pernah diselesaikan
+  completed_dates: string[];
 }
 
 export default function Home() {
@@ -66,6 +66,17 @@ export default function Home() {
   const [habitTitle, setHabitTitle] = useState('');
   const [habitCategory, setHabitCategory] = useState('Pribadi');
   const [habitFrequency, setHabitFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+
+  // Helper mendapatkan tanggal lokal format YYYY-MM-DD yang akurat (menghindari selisih UTC)
+  const getLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayStr = getLocalDateString();
 
   useEffect(() => {
     if (mainTab === 'todo') {
@@ -172,18 +183,17 @@ export default function Home() {
     if (!error) fetchTodos();
   };
 
-  // LOGIKA HABIT HARIAN: Toggle mencakup tanggal hari ini secara spesifik
+  // LOGIKA HABIT HARIAN YANG DISEMPURNAKAN
   const toggleHabitToday = async (habit: Habit) => {
-    const todayStr = new Date().toISOString().split('T')[0];
     const currentDates = habit.completed_dates || [];
     const isCompletedToday = currentDates.includes(todayStr);
 
     let updatedDates: string[];
     if (isCompletedToday) {
-      // Jika hari ini sudah dicentang, batalkan (hapus tanggal hari ini dari riwayat)
+      // Jika hari ini sudah ada, hapus hanya tanggal hari ini
       updatedDates = currentDates.filter((d) => d !== todayStr);
     } else {
-      // Jika belum dicentang, tambahkan tanggal hari ini ke riwayat
+      // Jika belum, tambahkan tanggal hari ini
       updatedDates = [...currentDates, todayStr];
       confetti({ particleCount: 70, spread: 50, origin: { y: 0.6 }, colors: ['#166534', '#22c55e', '#84cc16'] });
     }
@@ -253,10 +263,9 @@ export default function Home() {
 
   const getDeadlineStatus = (dateStr: string) => {
     if (!dateStr) return null;
-    const today = new Date().toISOString().split('T')[0];
-    if (dateStr < today) {
+    if (dateStr < todayStr) {
       return { label: 'Overdue', bg: '#fee2e2', text: '#991b1b', border: '#f87171' };
-    } else if (dateStr === today) {
+    } else if (dateStr === todayStr) {
       return { label: 'Hari Ini', bg: '#292524', text: '#f5f5f4', border: '#44403c' };
     }
     return null;
@@ -276,10 +285,8 @@ export default function Home() {
 
   const completedCount = todos.filter((t) => t.is_completed).length;
   const progressPercentage = todos.length > 0 ? Math.round((completedCount / todos.length) * 100) : 0;
-  const todayStr = new Date().toISOString().split('T')[0];
 
   const totalHabitsCount = habits.length;
-  // Menghitung habit yang selesai HANYA berdasarkan apakah tanggal hari ini ada di dalam array completed_dates
   const completedHabitsTodayCount = habits.filter((h) => h.completed_dates?.includes(todayStr)).length;
   const habitDailyPercentage = totalHabitsCount > 0 ? Math.round((completedHabitsTodayCount / totalHabitsCount) * 100) : 0;
 
@@ -597,7 +604,7 @@ export default function Home() {
         </>
       )}
 
-      {/* KONTEN UTAMA: HABIT TRACKER (Harian Terpisah Berdasarkan Tanggal) */}
+      {/* KONTEN UTAMA: HABIT TRACKER */}
       {mainTab === 'habit' && (
         <>
           <div style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '16px', borderRadius: '16px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
@@ -667,7 +674,6 @@ export default function Home() {
               </div>
             ) : (
               habits.map((habit) => {
-                // Pengecekan status hari ini secara dinamis
                 const isDoneToday = habit.completed_dates?.includes(todayStr);
                 const totalSuccess = habit.completed_dates?.length || 0;
 
@@ -684,7 +690,7 @@ export default function Home() {
                           <Circle style={{ color: '#a8a29e', flexShrink: 0 }} size={22} />
                         )}
                         <div>
-                          <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0, color: isDoneToday ? '#166534' : '#292524', textDecoration: isDoneToday ? 'line-through' : 'none' }}>
+                          <h3 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: isDoneToday ? '#166534' : '#292524', textDecoration: isDoneToday ? 'line-through' : 'none' }}>
                             {habit.title}
                           </h3>
                           <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '10px', color: '#78716c' }}>
