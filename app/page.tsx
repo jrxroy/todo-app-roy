@@ -32,14 +32,13 @@ interface Habit {
   title: string;
   category: string;
   frequency_type: 'daily' | 'weekly' | 'monthly';
-  target_count: number;
   completed_dates: string[];
 }
 
 export default function Home() {
   const [mainTab, setMainTab] = useState<'todo' | 'habit'>('todo');
 
-  // Todo States (TIDAK DIUBAH AGAR TETAP AMAN)
+  // Todo States (TIDAK DIUBAH)
   const [todos, setTodos] = useState<Todo[]>([]);
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
@@ -61,12 +60,11 @@ export default function Home() {
   const [editSubtasks, setEditSubtasks] = useState<Subtask[]>([]);
   const [editNewSubtaskTitle, setEditNewSubtaskTitle] = useState('');
 
-  // Habit States (BARU & TERSTRUKTUR)
+  // Habit States
   const [habits, setHabits] = useState<Habit[]>([]);
   const [habitTitle, setHabitTitle] = useState('');
   const [habitCategory, setHabitCategory] = useState('Pribadi');
   const [habitFrequency, setHabitFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-  const [habitTarget, setHabitTarget] = useState<number>(7);
 
   useEffect(() => {
     if (mainTab === 'todo') {
@@ -148,7 +146,6 @@ export default function Home() {
           title: habitTitle.trim(),
           category: habitCategory,
           frequency_type: habitFrequency,
-          target_count: habitFrequency === 'daily' ? 7 : habitFrequency === 'weekly' ? 4 : 30,
           completed_dates: [],
         },
       ]);
@@ -270,6 +267,11 @@ export default function Home() {
   const progressPercentage = todos.length > 0 ? Math.round((completedCount / todos.length) * 100) : 0;
   const todayStr = new Date().toISOString().split('T')[0];
 
+  // Parameter Persentase Habit Hari Ini
+  const totalHabitsCount = habits.length;
+  const completedHabitsTodayCount = habits.filter((h) => h.completed_dates?.includes(todayStr)).length;
+  const habitDailyPercentage = totalHabitsCount > 0 ? Math.round((completedHabitsTodayCount / totalHabitsCount) * 100) : 0;
+
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#fcfaf7', color: '#292524', padding: '24px 16px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif' }}>
       {/* Header */}
@@ -331,7 +333,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* KONTEN UTAMA: TO-DO LIST (TIDAK BERUBAH) */}
+      {/* KONTEN UTAMA: TO-DO LIST (TETAP AMAN) */}
       {mainTab === 'todo' && (
         <>
           <div style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '16px', borderRadius: '16px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
@@ -549,16 +551,27 @@ export default function Home() {
         </>
       )}
 
-      {/* KONTEN UTAMA: HABIT TRACKER (DENGAN PARAMETER & ANALISIS BOLONG) */}
+      {/* KONTEN UTAMA: HABIT TRACKER (AKUMULATIF & SKOR HARIAN) */}
       {mainTab === 'habit' && (
         <>
+          {/* Kartu Parameter Skor Performa Harian */}
+          <div style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '16px', borderRadius: '16px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', fontSize: '12px', fontWeight: 600 }}>
+              <span style={{ color: '#78716c' }}>Skor Kedisiplinan Hari Ini</span>
+              <span style={{ color: '#44403c', fontWeight: 'bold' }}>{completedHabitsTodayCount} dari {totalHabitsCount} habit ({habitDailyPercentage}%)</span>
+            </div>
+            <div style={{ width: '100%', backgroundColor: '#e9e2d0', height: '8px', borderRadius: '9999px', overflow: 'hidden', border: '1px solid #dccfb8', padding: '1px' }}>
+              <div style={{ backgroundColor: '#166534', height: '100%', borderRadius: '9999px', width: `${habitDailyPercentage}%`, transition: 'width 0.5s' }}></div>
+            </div>
+          </div>
+
           <form onSubmit={addHabit} style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '20px', borderRadius: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#44403c' }}>Buat Kebiasaan Permanen</h2>
+            <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#44403c' }}>Tambah Habit Permanen</h2>
             <input
               type="text"
               value={habitTitle}
               onChange={(e) => setHabitTitle(e.target.value)}
-              placeholder="Contoh: Latihan Piano, Baca Buku, Olahraga..."
+              placeholder="Contoh: Latihan Piano, Olahraga, Membaca..."
               style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '12px', padding: '12px 16px', fontSize: '14px', outline: 'none' }}
             />
             
@@ -577,15 +590,15 @@ export default function Home() {
               </div>
 
               <div>
-                <label style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 600, color: '#78716c', display: 'block', marginBottom: '4px' }}>Frekuensi Target:</label>
+                <label style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 600, color: '#78716c', display: 'block', marginBottom: '4px' }}>Frekuensi:</label>
                 <select
                   value={habitFrequency}
                   onChange={(e) => setHabitFrequency(e.target.value as any)}
                   style={{ width: '100%', backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '10px', padding: '10px', fontSize: '12px', outline: 'none' }}
                 >
-                  <option value="daily">Setiap Hari (7x seminggu)</option>
-                  <option value="weekly">Mingguan (Target per minggu)</option>
-                  <option value="monthly">Bulanan (Target per bulan)</option>
+                  <option value="daily">Setiap Hari</option>
+                  <option value="weekly">Mingguan</option>
+                  <option value="monthly">Bulanan</option>
                 </select>
               </div>
             </div>
@@ -599,21 +612,20 @@ export default function Home() {
             </button>
           </form>
 
-          {/* List Habit Tracker Dengan Analisis Performa */}
+          {/* List Habit Tracker Akumulatif */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ fontSize: '12px', fontWeight: 600, color: '#78716c', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <BarChart2 size={14} /> Pemantauan Konsistensi Kebiasaan
+              <BarChart2 size={14} /> Daftar Habit Aktif (Tracking Berkelanjutan)
             </div>
             {habits.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px', color: '#a8a29e', fontSize: '12px', backgroundColor: '#f4efe6', borderRadius: '16px', border: '1px solid #e6decb' }}>
-                Belum ada habit yang dipantau.
+                Belum ada habit permanen.
               </div>
             ) : (
               habits.map((habit) => {
                 const isDoneToday = habit.completed_dates?.includes(todayStr);
                 const totalSuccess = habit.completed_dates?.length || 0;
-                
-                // Menghitung statistik sederhana performa
+
                 return (
                   <div key={habit.id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e6decb', backgroundColor: '#f4efe6', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -642,10 +654,10 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {/* Parameter Statistik & Riwayat Bolong */}
+                    {/* Riwayat & Akumulasi Keberhasilan */}
                     <div style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', padding: '10px 12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
                       <span style={{ color: '#57534e', fontWeight: 500 }}>
-                        Total Keberhasilan: <strong style={{ color: '#292524' }}>{totalSuccess} kali tercatat</strong>
+                        Akumulasi Sukses: <strong style={{ color: '#292524' }}>{totalSuccess} hari tercatat</strong>
                       </span>
                       <span style={{ color: isDoneToday ? '#166534' : '#b45309', fontWeight: 'bold' }}>
                         {isDoneToday ? '✓ Selesai Hari Ini' : '○ Belum Dicentang'}
