@@ -32,7 +32,7 @@ interface Habit {
   title: string;
   category: string;
   frequency_type: 'daily' | 'weekly' | 'monthly';
-  completed_dates: string[];
+  completed_dates: string[]; // Menyimpan daftar tanggal string 'YYYY-MM-DD' yang pernah diselesaikan
 }
 
 export default function Home() {
@@ -42,7 +42,7 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('active'); // Default Belum Selesai
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('active');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   const [title, setTitle] = useState('');
@@ -172,15 +172,19 @@ export default function Home() {
     if (!error) fetchTodos();
   };
 
+  // LOGIKA HABIT HARIAN: Toggle mencakup tanggal hari ini secara spesifik
   const toggleHabitToday = async (habit: Habit) => {
     const todayStr = new Date().toISOString().split('T')[0];
-    const isCompletedToday = habit.completed_dates?.includes(todayStr);
+    const currentDates = habit.completed_dates || [];
+    const isCompletedToday = currentDates.includes(todayStr);
 
-    let updatedDates = [...(habit.completed_dates || [])];
+    let updatedDates: string[];
     if (isCompletedToday) {
-      updatedDates = updatedDates.filter((d) => d !== todayStr);
+      // Jika hari ini sudah dicentang, batalkan (hapus tanggal hari ini dari riwayat)
+      updatedDates = currentDates.filter((d) => d !== todayStr);
     } else {
-      updatedDates.push(todayStr);
+      // Jika belum dicentang, tambahkan tanggal hari ini ke riwayat
+      updatedDates = [...currentDates, todayStr];
       confetti({ particleCount: 70, spread: 50, origin: { y: 0.6 }, colors: ['#166534', '#22c55e', '#84cc16'] });
     }
 
@@ -275,6 +279,7 @@ export default function Home() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const totalHabitsCount = habits.length;
+  // Menghitung habit yang selesai HANYA berdasarkan apakah tanggal hari ini ada di dalam array completed_dates
   const completedHabitsTodayCount = habits.filter((h) => h.completed_dates?.includes(todayStr)).length;
   const habitDailyPercentage = totalHabitsCount > 0 ? Math.round((completedHabitsTodayCount / totalHabitsCount) * 100) : 0;
 
@@ -466,7 +471,7 @@ export default function Home() {
             </button>
           </form>
 
-          {/* Filter Status (Default Aktif/Belum Selesai) & Pencarian */}
+          {/* Filter Status & Pencarian */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', backgroundColor: '#f4efe6', padding: '4px', borderRadius: '12px', border: '1px solid #e6decb' }}>
               <button
@@ -592,7 +597,7 @@ export default function Home() {
         </>
       )}
 
-      {/* KONTEN UTAMA: HABIT TRACKER */}
+      {/* KONTEN UTAMA: HABIT TRACKER (Harian Terpisah Berdasarkan Tanggal) */}
       {mainTab === 'habit' && (
         <>
           <div style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '16px', borderRadius: '16px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
@@ -606,7 +611,7 @@ export default function Home() {
           </div>
 
           <form onSubmit={addHabit} style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '20px', borderRadius: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#44403c' }}>Tambah Habit Permanen</h2>
+            <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#44403c' }}>Tambah Habit Rutin</h2>
             <input
               type="text"
               value={habitTitle}
@@ -654,14 +659,15 @@ export default function Home() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ fontSize: '12px', fontWeight: 600, color: '#78716c', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <BarChart2 size={14} /> Daftar Habit Aktif (Tracking Berkelanjutan)
+              <BarChart2 size={14} /> Daftar Habit (Reset Otomatis Setiap Hari)
             </div>
             {habits.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px', color: '#a8a29e', fontSize: '12px', backgroundColor: '#f4efe6', borderRadius: '16px', border: '1px solid #e6decb' }}>
-                Belum ada habit permanen.
+                Belum ada habit rutin.
               </div>
             ) : (
               habits.map((habit) => {
+                // Pengecekan status hari ini secara dinamis
                 const isDoneToday = habit.completed_dates?.includes(todayStr);
                 const totalSuccess = habit.completed_dates?.length || 0;
 
@@ -695,10 +701,10 @@ export default function Home() {
 
                     <div style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', padding: '10px 12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
                       <span style={{ color: '#57534e', fontWeight: 500 }}>
-                        Akumulasi Sukses: <strong style={{ color: '#292524' }}>{totalSuccess} hari tercatat</strong>
+                        Total Hari Dikerjakan: <strong style={{ color: '#292524' }}>{totalSuccess} hari</strong>
                       </span>
                       <span style={{ color: isDoneToday ? '#166534' : '#b45309', fontWeight: 'bold' }}>
-                        {isDoneToday ? '✓ Selesai Hari Ini' : '○ Belum Dicentang'}
+                        {isDoneToday ? '✓ Selesai Hari Ini' : '○ Belum Dicentang Hari Ini'}
                       </span>
                     </div>
                   </div>
