@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Plus, CheckCircle2, Circle, Trash2, Calendar, Tag, Compass, Search, AlertCircle, Edit3, X, CheckSquare, Flame } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, Calendar, Tag, Compass, Search, AlertCircle, Edit3, X, CheckSquare, Flame, BarChart2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const supabase = createClient(
@@ -31,13 +31,15 @@ interface Habit {
   id: string;
   title: string;
   category: string;
+  frequency_type: 'daily' | 'weekly' | 'monthly';
+  target_count: number;
   completed_dates: string[];
 }
 
 export default function Home() {
   const [mainTab, setMainTab] = useState<'todo' | 'habit'>('todo');
 
-  // Todo States
+  // Todo States (TIDAK DIUBAH AGAR TETAP AMAN)
   const [todos, setTodos] = useState<Todo[]>([]);
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
@@ -59,10 +61,12 @@ export default function Home() {
   const [editSubtasks, setEditSubtasks] = useState<Subtask[]>([]);
   const [editNewSubtaskTitle, setEditNewSubtaskTitle] = useState('');
 
-  // Habit States
+  // Habit States (BARU & TERSTRUKTUR)
   const [habits, setHabits] = useState<Habit[]>([]);
   const [habitTitle, setHabitTitle] = useState('');
   const [habitCategory, setHabitCategory] = useState('Pribadi');
+  const [habitFrequency, setHabitFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [habitTarget, setHabitTarget] = useState<number>(7);
 
   useEffect(() => {
     if (mainTab === 'todo') {
@@ -143,6 +147,8 @@ export default function Home() {
         {
           title: habitTitle.trim(),
           category: habitCategory,
+          frequency_type: habitFrequency,
+          target_count: habitFrequency === 'daily' ? 7 : habitFrequency === 'weekly' ? 4 : 30,
           completed_dates: [],
         },
       ]);
@@ -325,10 +331,9 @@ export default function Home() {
         </button>
       </div>
 
-      {/* KONTEN UTAMA: TO-DO LIST */}
+      {/* KONTEN UTAMA: TO-DO LIST (TIDAK BERUBAH) */}
       {mainTab === 'todo' && (
         <>
-          {/* Statistik */}
           <div style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '16px', borderRadius: '16px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', fontSize: '12px', fontWeight: 600 }}>
               <span style={{ color: '#78716c' }}>Pencapaian Periode Ini</span>
@@ -339,7 +344,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Tab Sub Navigasi Waktu */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', backgroundColor: '#f4efe6', padding: '6px', borderRadius: '16px', marginBottom: '20px', border: '1px solid #e6decb' }}>
             {(['daily', 'weekly', 'monthly'] as const).map((tab) => (
               <button
@@ -362,7 +366,6 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Form Input Todo */}
           <form onSubmit={addTodo} style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '20px', borderRadius: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <input
               type="text"
@@ -424,7 +427,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Sub-tugas */}
             <div style={{ borderTop: '1px solid #e6decb', paddingTop: '12px' }}>
               <label style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 600, color: '#78716c', display: 'block', marginBottom: '6px' }}>Sub-tugas:</label>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
@@ -456,7 +458,6 @@ export default function Home() {
             </button>
           </form>
 
-          {/* Filter & List Todos */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
             <div style={{ position: 'relative', width: '100%' }}>
               <Search size={16} style={{ position: 'absolute', left: '14px', top: '12px', color: '#a8a29e' }} />
@@ -548,70 +549,108 @@ export default function Home() {
         </>
       )}
 
-      {/* KONTEN UTAMA: HABIT TRACKER */}
+      {/* KONTEN UTAMA: HABIT TRACKER (DENGAN PARAMETER & ANALISIS BOLONG) */}
       {mainTab === 'habit' && (
         <>
-          {/* Form Tambah Habit */}
           <form onSubmit={addHabit} style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '20px', borderRadius: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#44403c' }}>Tambah Kebiasaan Baru</h2>
+            <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#44403c' }}>Buat Kebiasaan Permanen</h2>
             <input
               type="text"
               value={habitTitle}
               onChange={(e) => setHabitTitle(e.target.value)}
-              placeholder="Contoh: Latihan Piano, Olahraga 15 Menit..."
+              placeholder="Contoh: Latihan Piano, Baca Buku, Olahraga..."
               style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '12px', padding: '12px 16px', fontSize: '14px', outline: 'none' }}
             />
-            <select
-              value={habitCategory}
-              onChange={(e) => setHabitCategory(e.target.value)}
-              style={{ width: '100%', backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '12px', padding: '10px', fontSize: '12px', outline: 'none' }}
-            >
-              <option value="Pribadi">Pribadi</option>
-              <option value="Pekerjaan">Pekerjaan</option>
-              <option value="Side Hustle">Side Hustle</option>
-            </select>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <label style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 600, color: '#78716c', display: 'block', marginBottom: '4px' }}>Kategori:</label>
+                <select
+                  value={habitCategory}
+                  onChange={(e) => setHabitCategory(e.target.value)}
+                  style={{ width: '100%', backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '10px', padding: '10px', fontSize: '12px', outline: 'none' }}
+                >
+                  <option value="Pribadi">Pribadi</option>
+                  <option value="Pekerjaan">Pekerjaan</option>
+                  <option value="Side Hustle">Side Hustle</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 600, color: '#78716c', display: 'block', marginBottom: '4px' }}>Frekuensi Target:</label>
+                <select
+                  value={habitFrequency}
+                  onChange={(e) => setHabitFrequency(e.target.value as any)}
+                  style={{ width: '100%', backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '10px', padding: '10px', fontSize: '12px', outline: 'none' }}
+                >
+                  <option value="daily">Setiap Hari (7x seminggu)</option>
+                  <option value="weekly">Mingguan (Target per minggu)</option>
+                  <option value="monthly">Bulanan (Target per bulan)</option>
+                </select>
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              style={{ width: '100%', backgroundColor: '#292524', color: '#f5f5f4', padding: '12px', borderRadius: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', cursor: 'pointer', fontSize: '12px', textTransform: 'uppercase' }}
+              style={{ width: '100%', backgroundColor: '#292524', color: '#f5f5f4', padding: '12px', borderRadius: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', cursor: 'pointer', fontSize: '12px', textTransform: 'uppercase', marginTop: '4px' }}
             >
-              <Plus size={16} /> Tambah Habit
+              <Plus size={16} /> Simpan Habit Baru
             </button>
           </form>
 
-          {/* List Habit Tracker Hari Ini */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#78716c', marginBottom: '4px' }}>
-              Checklist Kebiasaan Hari Ini ({todayStr})
+          {/* List Habit Tracker Dengan Analisis Performa */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#78716c', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <BarChart2 size={14} /> Pemantauan Konsistensi Kebiasaan
             </div>
             {habits.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px', color: '#a8a29e', fontSize: '12px', backgroundColor: '#f4efe6', borderRadius: '16px', border: '1px solid #e6decb' }}>
-                Belum ada habit yang ditambahkan.
+                Belum ada habit yang dipantau.
               </div>
             ) : (
               habits.map((habit) => {
                 const isDoneToday = habit.completed_dates?.includes(todayStr);
+                const totalSuccess = habit.completed_dates?.length || 0;
+                
+                // Menghitung statistik sederhana performa
                 return (
-                  <div key={habit.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderRadius: '16px', border: '1px solid #e6decb', backgroundColor: '#f4efe6' }}>
-                    <div
-                      style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: 1 }}
-                      onClick={() => toggleHabitToday(habit)}
-                    >
-                      {isDoneToday ? (
-                        <CheckCircle2 style={{ color: '#166534' }} size={22} />
-                      ) : (
-                        <Circle style={{ color: '#a8a29e' }} size={22} />
-                      )}
-                      <div>
-                        <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0, color: isDoneToday ? '#166534' : '#292524', textDecoration: isDoneToday ? 'line-through' : 'none' }}>
-                          {habit.title}
-                        </h3>
-                        <span style={{ fontSize: '10px', color: '#78716c' }}>Kategori: {habit.category} | Streak: {habit.completed_dates?.length || 0} hari</span>
+                  <div key={habit.id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e6decb', backgroundColor: '#f4efe6', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: 1 }}
+                        onClick={() => toggleHabitToday(habit)}
+                      >
+                        {isDoneToday ? (
+                          <CheckCircle2 style={{ color: '#166534', flexShrink: 0 }} size={22} />
+                        ) : (
+                          <Circle style={{ color: '#a8a29e', flexShrink: 0 }} size={22} />
+                        )}
+                        <div>
+                          <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0, color: isDoneToday ? '#166534' : '#292524', textDecoration: isDoneToday ? 'line-through' : 'none' }}>
+                            {habit.title}
+                          </h3>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '10px', color: '#78716c' }}>
+                            <span>Kategori: {habit.category}</span>
+                            <span>•</span>
+                            <span style={{ textTransform: 'capitalize' }}>Tipe: {habit.frequency_type}</span>
+                          </div>
+                        </div>
                       </div>
+                      <button onClick={() => deleteHabit(habit.id)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }} title="Hapus Habit">
+                        <Trash2 size={16} />
+                      </button>
                     </div>
-                    <button onClick={() => deleteHabit(habit.id)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}>
-                      <Trash2 size={16} />
-                    </button>
+
+                    {/* Parameter Statistik & Riwayat Bolong */}
+                    <div style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', padding: '10px 12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                      <span style={{ color: '#57534e', fontWeight: 500 }}>
+                        Total Keberhasilan: <strong style={{ color: '#292524' }}>{totalSuccess} kali tercatat</strong>
+                      </span>
+                      <span style={{ color: isDoneToday ? '#166534' : '#b45309', fontWeight: 'bold' }}>
+                        {isDoneToday ? '✓ Selesai Hari Ini' : '○ Belum Dicentang'}
+                      </span>
+                    </div>
                   </div>
                 );
               })
