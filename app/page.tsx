@@ -67,7 +67,7 @@ export default function Home() {
   const [habitCategory, setHabitCategory] = useState('Pribadi');
   const [habitFrequency, setHabitFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
-  // Helper mendapatkan tanggal lokal format YYYY-MM-DD yang akurat (menghindari selisih UTC)
+  // Helper mendapatkan tanggal lokal format YYYY-MM-DD yang akurat
   const getLocalDateString = () => {
     const d = new Date();
     const year = d.getFullYear();
@@ -183,17 +183,14 @@ export default function Home() {
     if (!error) fetchTodos();
   };
 
-  // LOGIKA HABIT HARIAN YANG DISEMPURNAKAN
   const toggleHabitToday = async (habit: Habit) => {
     const currentDates = habit.completed_dates || [];
     const isCompletedToday = currentDates.includes(todayStr);
 
     let updatedDates: string[];
     if (isCompletedToday) {
-      // Jika hari ini sudah ada, hapus hanya tanggal hari ini
       updatedDates = currentDates.filter((d) => d !== todayStr);
     } else {
-      // Jika belum, tambahkan tanggal hari ini
       updatedDates = [...currentDates, todayStr];
       confetti({ particleCount: 70, spread: 50, origin: { y: 0.6 }, colors: ['#166534', '#22c55e', '#84cc16'] });
     }
@@ -666,7 +663,7 @@ export default function Home() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ fontSize: '12px', fontWeight: 600, color: '#78716c', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <BarChart2 size={14} /> Daftar Habit (Reset Otomatis Setiap Hari)
+              <BarChart2 size={14} /> Daftar Habit & Riwayat Mingguan
             </div>
             {habits.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px', color: '#a8a29e', fontSize: '12px', backgroundColor: '#f4efe6', borderRadius: '16px', border: '1px solid #e6decb' }}>
@@ -674,11 +671,53 @@ export default function Home() {
               </div>
             ) : (
               habits.map((habit) => {
-                const isDoneToday = habit.completed_dates?.includes(todayStr);
-                const totalSuccess = habit.completed_dates?.length || 0;
+                const currentDates = habit.completed_dates || [];
+                const isDoneToday = currentDates.includes(todayStr);
+                const totalSuccess = currentDates.length;
+
+                // Helper untuk membuat array 7 hari ke belakang
+                const getLast7Days = () => {
+                  const days = [];
+                  for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const dateStr = `${year}-${month}-${day}`;
+                    
+                    const dayLabel = d.toLocaleDateString('id-ID', { weekday: 'narrow' });
+                    const dayNumber = d.getDate();
+                    days.push({ dateStr, dayLabel, dayNumber });
+                  }
+                  return days;
+                };
+
+                const pastDays = getLast7Days();
+
+                const toggleHabitDate = async (targetDateStr: string) => {
+                  const isCheckedOnTarget = currentDates.includes(targetDateStr);
+                  let updatedDates: string[];
+                  
+                  if (isCheckedOnTarget) {
+                    updatedDates = currentDates.filter((d) => d !== targetDateStr);
+                  } else {
+                    updatedDates = [...currentDates, targetDateStr];
+                    if (targetDateStr === todayStr) {
+                      confetti({ particleCount: 70, spread: 50, origin: { y: 0.6 }, colors: ['#166534', '#22c55e', '#84cc16'] });
+                    }
+                  }
+
+                  const { error } = await supabase
+                    .from('habits')
+                    .update({ completed_dates: updatedDates })
+                    .eq('id', habit.id);
+
+                  if (!error) fetchHabits();
+                };
 
                 return (
-                  <div key={habit.id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e6decb', backgroundColor: '#f4efe6', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div key={habit.id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e6decb', backgroundColor: '#f4efe6', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div
                         style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: 1 }}
@@ -705,13 +744,44 @@ export default function Home() {
                       </button>
                     </div>
 
-                    <div style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', padding: '10px 12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                      <span style={{ color: '#57534e', fontWeight: 500 }}>
-                        Total Hari Dikerjakan: <strong style={{ color: '#292524' }}>{totalSuccess} hari</strong>
-                      </span>
-                      <span style={{ color: isDoneToday ? '#166534' : '#b45309', fontWeight: 'bold' }}>
-                        {isDoneToday ? '✓ Selesai Hari Ini' : '○ Belum Dicentang Hari Ini'}
-                      </span>
+                    <div style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', padding: '10px 12px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#78716c', fontWeight: 600 }}>
+                        <span>Riwayat 7 Hari Terakhir (Klik untuk ubah)</span>
+                        <span>Total: {totalSuccess} hari</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+                        {pastDays.map((item) => {
+                          const isChecked = currentDates.includes(item.dateStr);
+                          const isToday = item.dateStr === todayStr;
+
+                          return (
+                            <button
+                              key={item.dateStr}
+                              type="button"
+                              onClick={() => toggleHabitDate(item.dateStr)}
+                              title={`Ubah status tanggal ${item.dateStr}`}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '6px 2px',
+                                borderRadius: '8px',
+                                border: '1px solid',
+                                cursor: 'pointer',
+                                backgroundColor: isChecked ? '#166534' : '#f4efe6',
+                                borderColor: isChecked ? '#166534' : isToday ? '#b45309' : '#e2d9c4',
+                                color: isChecked ? '#ffffff' : '#57534e',
+                                fontSize: '10px',
+                                fontWeight: isToday ? 'bold' : 'normal'
+                              }}
+                            >
+                              <span style={{ opacity: 0.8 }}>{item.dayLabel}</span>
+                              <span style={{ fontSize: '11px', marginTop: '2px' }}>{item.dayNumber}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 );
