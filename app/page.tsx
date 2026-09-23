@@ -38,7 +38,7 @@ interface Habit {
 export default function Home() {
   const [mainTab, setMainTab] = useState<'todo' | 'habit'>('todo');
 
-  // Todo States (TIDAK DIUBAH)
+  // Todo States
   const [todos, setTodos] = useState<Todo[]>([]);
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
@@ -267,7 +267,6 @@ export default function Home() {
   const progressPercentage = todos.length > 0 ? Math.round((completedCount / todos.length) * 100) : 0;
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Parameter Persentase Habit Hari Ini
   const totalHabitsCount = habits.length;
   const completedHabitsTodayCount = habits.filter((h) => h.completed_dates?.includes(todayStr)).length;
   const habitDailyPercentage = totalHabitsCount > 0 ? Math.round((completedHabitsTodayCount / totalHabitsCount) * 100) : 0;
@@ -289,7 +288,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Navigasi Tab (To Do List vs Habit Tracker) */}
+      {/* Main Navigasi Tab */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }}>
         <button
           onClick={() => setMainTab('todo')}
@@ -333,7 +332,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* KONTEN UTAMA: TO-DO LIST (TETAP AMAN) */}
+      {/* KONTEN UTAMA: TO-DO LIST */}
       {mainTab === 'todo' && (
         <>
           <div style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '16px', borderRadius: '16px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
@@ -525,22 +524,36 @@ export default function Home() {
                         <button onClick={() => saveEditedTodo(todo.id)} style={{ backgroundColor: '#292524', color: '#f5f5f4', padding: '8px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>Simpan</button>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1, cursor: 'pointer' }} onClick={() => toggleTodo(todo.id, todo.is_completed)}>
-                          {todo.is_completed ? <CheckCircle2 style={{ color: '#78716c', marginTop: '2px' }} size={20} /> : <Circle style={{ color: '#a8a29e', marginTop: '2px' }} size={20} />}
-                          <div>
-                            <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0, textDecoration: todo.is_completed ? 'line-through' : 'none', color: todo.is_completed ? '#a8a29e' : '#292524' }}>{todo.title}</h3>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                              <span style={{ fontSize: '10px', backgroundColor: '#eef5ef', color: '#3f6212', padding: '3px 8px', borderRadius: '6px' }}><Tag size={10} /> {todo.category}</span>
-                              {todo.due_date && <span style={{ fontSize: '10px', backgroundColor: '#fdfaf5', color: '#78716c', padding: '3px 8px', borderRadius: '6px' }}><Calendar size={10} /> {todo.due_date}</span>}
-                              {deadlineStatus && <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '6px', backgroundColor: deadlineStatus.bg, color: deadlineStatus.text, fontWeight: 'bold' }}><AlertCircle size={10} /> {deadlineStatus.label}</span>}
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1, cursor: 'pointer' }} onClick={() => toggleTodo(todo.id, todo.is_completed)}>
+                            {todo.is_completed ? <CheckCircle2 style={{ color: '#78716c', marginTop: '2px' }} size={20} /> : <Circle style={{ color: '#a8a29e', marginTop: '2px' }} size={20} />}
+                            <div>
+                              <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0, textDecoration: todo.is_completed ? 'line-through' : 'none', color: todo.is_completed ? '#a8a29e' : '#292524' }}>{todo.title}</h3>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                <span style={{ fontSize: '10px', backgroundColor: '#eef5ef', color: '#3f6212', padding: '3px 8px', borderRadius: '6px' }}><Tag size={10} /> {todo.category}</span>
+                                {todo.due_date && <span style={{ fontSize: '10px', backgroundColor: '#fdfaf5', color: '#78716c', padding: '3px 8px', borderRadius: '6px' }}><Calendar size={10} /> {todo.due_date}</span>}
+                                {deadlineStatus && <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '6px', backgroundColor: deadlineStatus.bg, color: deadlineStatus.text, fontWeight: 'bold' }}><AlertCircle size={10} /> {deadlineStatus.label}</span>}
+                              </div>
                             </div>
                           </div>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button onClick={() => startEditing(todo)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Edit3 size={15} /></button>
+                            <button onClick={() => deleteTodo(todo.id)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button onClick={() => startEditing(todo)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Edit3 size={15} /></button>
-                          <button onClick={() => deleteTodo(todo.id)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Trash2 size={16} /></button>
-                        </div>
+
+                        {/* SUB-TUGAS KECIL KEMBALI MUNCUL DI SINI */}
+                        {todo.subtasks && todo.subtasks.length > 0 && (
+                          <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(230, 222, 203, 0.6)', display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '30px' }}>
+                            {todo.subtasks.map((sub) => (
+                              <div key={sub.id} style={{ fontSize: '12px', color: '#78716c', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#a8a29e' }}></div>
+                                <span>{sub.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -551,10 +564,9 @@ export default function Home() {
         </>
       )}
 
-      {/* KONTEN UTAMA: HABIT TRACKER (AKUMULATIF & SKOR HARIAN) */}
+      {/* KONTEN UTAMA: HABIT TRACKER */}
       {mainTab === 'habit' && (
         <>
-          {/* Kartu Parameter Skor Performa Harian */}
           <div style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '16px', borderRadius: '16px', marginBottom: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', fontSize: '12px', fontWeight: 600 }}>
               <span style={{ color: '#78716c' }}>Skor Kedisiplinan Hari Ini</span>
@@ -612,7 +624,6 @@ export default function Home() {
             </button>
           </form>
 
-          {/* List Habit Tracker Akumulatif */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ fontSize: '12px', fontWeight: 600, color: '#78716c', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <BarChart2 size={14} /> Daftar Habit Aktif (Tracking Berkelanjutan)
@@ -654,7 +665,6 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {/* Riwayat & Akumulasi Keberhasilan */}
                     <div style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', padding: '10px 12px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
                       <span style={{ color: '#57534e', fontWeight: 500 }}>
                         Akumulasi Sukses: <strong style={{ color: '#292524' }}>{totalSuccess} hari tercatat</strong>
