@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Plus, CheckCircle2, Circle, Trash2, Calendar, Tag, Compass, Search, AlertCircle, Edit3, X, CheckSquare, Flame, BookOpen, Lightbulb, ExternalLink } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, CheckSquare, Flame, BookOpen, Lightbulb } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { HabitView } from './components/HabitWorkspaceComp';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -22,35 +23,21 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('active');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [category, setCategory] = useState<string>('Pribadi');
   const [dueDate, setDueDate] = useState('');
-  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editPriority, setEditPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [editCategory, setEditCategory] = useState<string>('Pribadi');
-  const [editDueDate, setEditDueDate] = useState('');
-  const [editSubtasks, setEditSubtasks] = useState<Subtask[]>([]);
-  const [editNewSubtaskTitle, setEditNewSubtaskTitle] = useState('');
-
   const [habits, setHabits] = useState<Habit[]>([]);
   const [habitTitle, setHabitTitle] = useState('');
-  const [habitCategory, setHabitCategory] = useState('Pribadi');
-  const [habitFrequency, setHabitFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-  const [activeCalendarHabitId, setActiveCalendarHabitId] = useState<string | null>(null);
 
   const [workspaces, setWorkspaces] = useState<WorkspaceItem[]>([]);
   const [wsTitle, setWsTitle] = useState('');
   const [wsDesc, setWsDesc] = useState('');
-  const [wsLink, setWsLink] = useState('');
 
   const [journals, setJournals] = useState<JournalItem[]>([]);
   const [journalDate, setJournalDate] = useState('');
@@ -109,7 +96,7 @@ export default function Home() {
   const addHabit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!habitTitle.trim()) return;
-    await supabase.from('habits').insert([{ title: habitTitle.trim(), category: habitCategory, frequency_type: habitFrequency, completed_dates: [] }]);
+    await supabase.from('habits').insert([{ title: habitTitle.trim(), category: 'Pribadi', frequency_type: 'daily', completed_dates: [] }]);
     setHabitTitle(''); fetchHabits();
   };
 
@@ -122,11 +109,16 @@ export default function Home() {
     fetchHabits();
   };
 
+  const deleteHabit = async (id: string) => {
+    await supabase.from('habits').delete().eq('id', id);
+    fetchHabits();
+  };
+
   const addWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!wsTitle.trim()) return;
-    await supabase.from('workspaces').insert([{ title: wsTitle.trim(), description: wsDesc.trim(), link: wsLink.trim(), category: 'Side Hustle' }]);
-    setWsTitle(''); setWsDesc(''); setWsLink(''); fetchWorkspaces();
+    await supabase.from('workspaces').insert([{ title: wsTitle.trim(), description: wsDesc.trim(), link: '', category: 'Side Hustle' }]);
+    setWsTitle(''); setWsDesc(''); fetchWorkspaces();
   };
 
   const addJournal = async (e: React.FormEvent) => {
@@ -213,26 +205,15 @@ export default function Home() {
       )}
 
       {mainTab === 'habit' && (
-        <>
-          <form onSubmit={addHabit} style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '20px', borderRadius: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <input type="text" value={habitTitle} onChange={e => setHabitTitle(e.target.value)} placeholder="Nama Habit Rutin..." style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '12px', padding: '12px', outline: 'none' }} />
-            <button type="submit" style={{ width: '100%', backgroundColor: '#292524', color: '#f5f5f4', padding: '12px', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>Tambah Habit</button>
-          </form>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {habits.map(habit => {
-              const done = (habit.completed_dates || []).includes(todayStr);
-              return (
-                <div key={habit.id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e6decb', backgroundColor: '#f4efe6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div onClick={() => toggleHabitToday(habit)} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-                    {done ? <CheckCircle2 color="#166534" size={22} /> : <Circle color="#a8a29e" size={22} />}
-                    <span style={{ fontWeight: 'bold', color: done ? '#166534' : '#292524' }}>{habit.title}</span>
-                  </div>
-                  <button onClick={async () => { await supabase.from('habits').delete().eq('id', habit.id); fetchHabits(); }} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Trash2 size={16} /></button>
-                </div>
-              );
-            })}
-          </div>
-        </>
+        <HabitView 
+          habits={habits}
+          addHabit={addHabit}
+          habitTitle={habitTitle}
+          setHabitTitle={setHabitTitle}
+          toggleHabitToday={toggleHabitToday}
+          deleteHabit={deleteHabit}
+          todayStr={todayStr}
+        />
       )}
 
       {mainTab === 'workspace' && (
