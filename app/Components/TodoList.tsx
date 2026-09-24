@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, ChevronUp, Edit3, X } from 'lucide-react';
-import { Todo, Subtask, Priority, Frequency } from '../../types';
+import { Todo, Subtask, Priority, Frequency } from '../types';
 
 interface TodoListProps {
   todos: Todo[];
