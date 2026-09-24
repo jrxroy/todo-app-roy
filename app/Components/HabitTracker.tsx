@@ -68,7 +68,7 @@ export function HabitTracker({ habits, addHabit, toggleHabitWeekDay, toggleHabit
             </tr>
           </thead>
           <tbody style={{ fontSize: '13px' }}>
-            {habits.map((habit) => {
+            {habits.map((habit: Habit) => {
               const weekStatuses = habit.completed_week || [false, false, false, false, false, false, false];
               return (
                 <tr key={habit.id} style={{ borderBottom: '1px solid #e9e2d0' }}>
@@ -78,7 +78,7 @@ export function HabitTracker({ habits, addHabit, toggleHabitWeekDay, toggleHabit
                       <Calendar size={12} /> Kalender Detail
                     </button>
                   </td>
-                  {weekStatuses.map((status, dayIdx) => (
+                  {weekStatuses.map((status: boolean, dayIdx: number) => (
                     <td key={dayIdx} style={{ padding: '12px 2px', textAlign: 'center' }}>
                       <button
                         onClick={() => toggleHabitWeekDay(habit.id, dayIdx)}
@@ -111,7 +111,7 @@ export function HabitTracker({ habits, addHabit, toggleHabitWeekDay, toggleHabit
       </div>
 
       {activeCalendarHabitId && (() => {
-        const h = habits.find((item) => item.id === activeCalendarHabitId);
+        const h = habits.find((item: Habit) => item.id === activeCalendarHabitId);
         if (!h) return null;
         const days = getMonthCalendarDays(modalYear, modalMonth, h.completed_dates || []);
         return (
@@ -131,7 +131,7 @@ export function HabitTracker({ habits, addHabit, toggleHabitWeekDay, toggleHabit
                 }} style={{ background: 'none', border: '1px solid #dccfb8', borderRadius: '8px', padding: '4px 8px', cursor: 'pointer' }}><ChevronRight size={16} /></button>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-                {days.map((item, idx) => item.empty ? <div key={idx} /> : (
+                {days.map((item: any, idx: number) => item.empty ? <div key={idx} /> : (
                   <button key={item.dateStr} onClick={() => toggleHabitDate(h.id, item.dateStr!)} style={{ aspectRatio: '1', borderRadius: '8px', border: '1px solid', backgroundColor: item.isChecked ? '#166534' : '#f4efe6', borderColor: item.isChecked ? '#166534' : '#e2d9c4', color: item.isChecked ? '#fff' : '#292524', cursor: 'pointer', fontWeight: item.isToday ? 'bold' : 'normal', fontSize: '12px' }}>
                     {item.day}
                   </button>

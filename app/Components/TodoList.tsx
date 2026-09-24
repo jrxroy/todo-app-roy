@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, ChevronUp, Edit3, X } from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { Todo, Subtask, Priority, Frequency } from '../types';
+import { Todo, Subtask, Priority, Frequency } from '../../types';
 
 interface TodoListProps {
   todos: Todo[];
@@ -12,6 +11,7 @@ interface TodoListProps {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   selectedCategoryFilter: string;
+  setSelectedCategoryFilter: (c: string) => void;
   addTodo: (title: string, priority: Priority, category: string, dueDate: string, subtasks: Subtask[]) => Promise<void>;
   toggleTodo: (id: string, status: boolean) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
@@ -21,7 +21,7 @@ interface TodoListProps {
 
 export function TodoList({
   todos, activeTab, setActiveTab, searchQuery, setSearchQuery,
-  selectedCategoryFilter, addTodo, toggleTodo, deleteTodo, updateTodo, progressPct
+  selectedCategoryFilter, setSelectedCategoryFilter, addTodo, toggleTodo, deleteTodo, updateTodo, progressPct
 }: TodoListProps) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
@@ -106,7 +106,7 @@ export function TodoList({
             <input type="text" value={newSubtaskTitle} onChange={e => setNewSubtaskTitle(e.target.value)} placeholder="Tambah langkah kecil..." style={{ flex: 1, backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '10px', padding: '8px', fontSize: '12px', outline: 'none' }} />
             <button type="button" onClick={handleAddSubtask} style={{ backgroundColor: '#e9e2d0', border: 'none', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Tambah</button>
           </div>
-          {subtasks.map(s => (
+          {subtasks.map((s: Subtask) => (
             <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', background: '#fcfaf7', padding: '4px 8px', borderRadius: '8px', marginBottom: '4px' }}>
               <span>- {s.title}</span>
               <button type="button" onClick={() => handleRemoveSubtask(s.id)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Trash2 size={12} /></button>
@@ -118,7 +118,7 @@ export function TodoList({
       </form>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {filteredTodos.map(todo => {
+        {filteredTodos.map((todo: Todo) => {
           const isExpanded = expandedTodoId === todo.id;
           return (
             <div key={todo.id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e6decb', backgroundColor: '#f4efe6' }}>
@@ -140,7 +140,7 @@ export function TodoList({
 
               {isExpanded && todo.subtasks && todo.subtasks.length > 0 && (
                 <div style={{ marginTop: '10px', paddingLeft: '30px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {todo.subtasks.map(sub => (
+                  {todo.subtasks.map((sub: Subtask) => (
                     <div key={sub.id} style={{ fontSize: '12px', color: '#57534e', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ width: '4px', height: '4px', backgroundColor: '#78716c', borderRadius: '50%' }}></span>
                       {sub.title}
@@ -164,7 +164,7 @@ export function TodoList({
             
             <div>
               <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#78716c' }}>Kelola Sub-tugas:</label>
-              {editingTodo.subtasks.map((s, idx) => (
+              {editingTodo.subtasks.map((s: Subtask, idx: number) => (
                 <div key={s.id} style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
                   <input type="text" value={s.title} onChange={e => {
                     const updatedSub = [...editingTodo.subtasks];

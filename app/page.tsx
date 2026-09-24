@@ -160,6 +160,7 @@ export default function Home() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           selectedCategoryFilter={selectedCategoryFilter}
+          setSelectedCategoryFilter={setSelectedCategoryFilter}
           addTodo={addTodo}
           toggleTodo={toggleTodo}
           deleteTodo={deleteTodo}
