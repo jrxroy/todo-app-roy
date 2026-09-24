@@ -72,18 +72,40 @@ export default function Home() {
     fetchTodos();
   };
 
+  const updateTodo = async (updatedTodo: Todo) => {
+    await supabase.from('todos').update({
+      title: updatedTodo.title,
+      priority: updatedTodo.priority,
+      category: updatedTodo.category,
+      due_date: updatedTodo.due_date,
+      subtasks: updatedTodo.subtasks
+    }).eq('id', updatedTodo.id);
+    fetchTodos();
+  };
+
   const addHabit = async (title: string) => {
-    await supabase.from('habits').insert([{ title, category: 'Pribadi', frequency_type: 'weekly', completed_week: [false, false, false, false, false, false, false] }]);
+    await supabase.from('habits').insert([{ title, category: 'Pribadi', frequency_type: 'weekly', completed_week: [false, false, false, false, false, false, false], completed_dates: [] }]);
     fetchHabits();
   };
 
-  const toggleHabitDay = async (habitId: string, dayIndex: number) => {
+  const toggleHabitWeekDay = async (habitId: string, dayIndex: number) => {
     const habit = habits.find(h => h.id === habitId);
     if (!habit) return;
     const currentWeek = [...(habit.completed_week || [false, false, false, false, false, false, false])];
     currentWeek[dayIndex] = !currentWeek[dayIndex];
     if (currentWeek[dayIndex]) confetti({ particleCount: 50, spread: 40 });
     await supabase.from('habits').update({ completed_week: currentWeek }).eq('id', habitId);
+    fetchHabits();
+  };
+
+  const toggleHabitDate = async (habitId: string, dateStr: string) => {
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return;
+    const currentDates = habit.completed_dates || [];
+    const isDone = currentDates.includes(dateStr);
+    const updatedDates = isDone ? currentDates.filter(d => d !== dateStr) : [...currentDates, dateStr];
+    if (!isDone) confetti({ particleCount: 60, spread: 50 });
+    await supabase.from('habits').update({ completed_dates: updatedDates }).eq('id', habitId);
     fetchHabits();
   };
 
@@ -138,10 +160,10 @@ export default function Home() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           selectedCategoryFilter={selectedCategoryFilter}
-          setSelectedCategoryFilter={setSelectedCategoryFilter}
           addTodo={addTodo}
           toggleTodo={toggleTodo}
           deleteTodo={deleteTodo}
+          updateTodo={updateTodo}
           progressPct={progressPct}
         />
       )}
@@ -150,8 +172,10 @@ export default function Home() {
         <HabitTracker 
           habits={habits}
           addHabit={addHabit}
-          toggleHabitDay={toggleHabitDay}
+          toggleHabitWeekDay={toggleHabitWeekDay}
+          toggleHabitDate={toggleHabitDate}
           deleteHabit={deleteHabit}
+          todayStr={todayStr}
         />
       )}
 

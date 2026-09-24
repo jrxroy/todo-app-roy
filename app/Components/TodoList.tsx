@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, ChevronUp, Edit3, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Todo, Subtask, Priority, Frequency } from '../types';
 
@@ -12,16 +12,16 @@ interface TodoListProps {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   selectedCategoryFilter: string;
-  setSelectedCategoryFilter: (c: string) => void;
   addTodo: (title: string, priority: Priority, category: string, dueDate: string, subtasks: Subtask[]) => Promise<void>;
   toggleTodo: (id: string, status: boolean) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
+  updateTodo: (updatedTodo: Todo) => Promise<void>;
   progressPct: number;
 }
 
 export function TodoList({
   todos, activeTab, setActiveTab, searchQuery, setSearchQuery,
-  selectedCategoryFilter, setSelectedCategoryFilter, addTodo, toggleTodo, deleteTodo, progressPct
+  selectedCategoryFilter, addTodo, toggleTodo, deleteTodo, updateTodo, progressPct
 }: TodoListProps) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
@@ -30,6 +30,7 @@ export function TodoList({
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [expandedTodoId, setExpandedTodoId] = useState<string | null>(null);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
 
   const handleAddSubtask = () => {
     if (!newSubtaskTitle.trim()) return;
@@ -46,6 +47,13 @@ export function TodoList({
     if (!title.trim()) return;
     await addTodo(title.trim(), priority, category, dueDate, subtasks);
     setTitle(''); setDueDate(''); setSubtasks([]);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTodo || !editingTodo.title.trim()) return;
+    await updateTodo(editingTodo);
+    setEditingTodo(null);
   };
 
   const filteredTodos = todos.filter(t => 
@@ -119,7 +127,8 @@ export function TodoList({
                   {todo.is_completed ? <CheckCircle2 color="#78716c" size={20} /> : <Circle color="#a8a29e" size={20} />}
                   <span style={{ fontSize: '14px', fontWeight: 600, textDecoration: todo.is_completed ? 'line-through' : 'none' }}>{todo.title}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button onClick={() => setEditingTodo({ ...todo })} style={{ background: 'none', border: 'none', color: '#78716c', cursor: 'pointer' }}><Edit3 size={16} /></button>
                   {todo.subtasks && todo.subtasks.length > 0 && (
                     <button onClick={() => setExpandedTodoId(isExpanded ? null : todo.id)} style={{ background: 'none', border: 'none', color: '#78716c', cursor: 'pointer' }}>
                       {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -143,6 +152,37 @@ export function TodoList({
           );
         })}
       </div>
+
+      {editingTodo && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 50 }}>
+          <form onSubmit={handleSaveEdit} style={{ backgroundColor: '#fcfaf7', borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 'bold', margin: 0 }}>Edit Tugas & Sub-tugas</h3>
+              <button type="button" onClick={() => setEditingTodo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <input type="text" value={editingTodo.title} onChange={e => setEditingTodo({ ...editingTodo, title: e.target.value })} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #e2d9c4', background: '#fff' }} />
+            
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#78716c' }}>Kelola Sub-tugas:</label>
+              {editingTodo.subtasks.map((s, idx) => (
+                <div key={s.id} style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                  <input type="text" value={s.title} onChange={e => {
+                    const updatedSub = [...editingTodo.subtasks];
+                    updatedSub[idx].title = e.target.value;
+                    setEditingTodo({ ...editingTodo, subtasks: updatedSub });
+                  }} style={{ flex: 1, padding: '6px', fontSize: '12px', border: '1px solid #e2d9c4', borderRadius: '6px' }} />
+                  <button type="button" onClick={() => {
+                    const updatedSub = editingTodo.subtasks.filter(sub => sub.id !== s.id);
+                    setEditingTodo({ ...editingTodo, subtasks: updatedSub });
+                  }} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                </div>
+              ))}
+            </div>
+
+            <button type="submit" style={{ backgroundColor: '#292524', color: '#f5f5f4', padding: '10px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer', marginTop: '10px' }}>Simpan Perubahan</button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

@@ -22,8 +22,9 @@ export interface Habit {
   id: string;
   title: string;
   category: string;
-  frequency_type: 'weekly';
+  frequency_type: string;
   completed_week: boolean[];
+  completed_dates: string[];
 }
 
 export interface WorkspaceItem {
