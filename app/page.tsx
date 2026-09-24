@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Plus, CheckCircle2, Circle, Trash2, Calendar, Tag, Compass, Search, AlertCircle, Edit3, X, CheckSquare, Flame, BarChart2 } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, Calendar, Tag, Compass, Search, AlertCircle, Edit3, X, CheckSquare, Flame, BarChart2, ChevronLeft, ChevronRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const supabase = createClient(
@@ -66,6 +66,12 @@ export default function Home() {
   const [habitTitle, setHabitTitle] = useState('');
   const [habitCategory, setHabitCategory] = useState('Pribadi');
   const [habitFrequency, setHabitFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+
+  // State untuk Modal Kalender Bulanan Detail (Menyimpan habitId yang sedang dibuka modalnya)
+  const [activeCalendarHabitId, setActiveCalendarHabitId] = useState<string | null>(null);
+  // State navigasi bulan pada modal (default bulan & tahun saat ini)
+  const [modalYear, setModalYear] = useState<number>(new Date().getFullYear());
+  const [modalMonth, setModalMonth] = useState<number>(new Date().getMonth()); // 0 - 11
 
   // Helper mendapatkan tanggal lokal format YYYY-MM-DD yang akurat
   const getLocalDateString = () => {
@@ -286,6 +292,58 @@ export default function Home() {
   const totalHabitsCount = habits.length;
   const completedHabitsTodayCount = habits.filter((h) => h.completed_dates?.includes(todayStr)).length;
   const habitDailyPercentage = totalHabitsCount > 0 ? Math.round((completedHabitsTodayCount / totalHabitsCount) * 100) : 0;
+
+  // Helper untuk statistik bulan berjalan (Current Month Stats)
+  const getCurrentMonthStats = (completedDates: string[]) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    // Total hari dalam bulan ini
+    const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // Hari yang sudah terlewat atau sampai hari ini di bulan ini
+    const todayDateNum = now.getDate();
+
+    let countThisMonth = 0;
+    completedDates.forEach((dStr) => {
+      const parts = dStr.split('-');
+      if (parts.length === 3) {
+        const y = parseInt(parts[0]);
+        const m = parseInt(parts[1]) - 1;
+        if (y === year && m === month) {
+          countThisMonth++;
+        }
+      }
+    });
+
+    const percentage = Math.round((countThisMonth / todayDateNum) * 100);
+    return { countThisMonth, totalElapsed: todayDateNum, totalDaysInMonth, percentage };
+  };
+
+  // Helper untuk membangun data grid kalender bulanan penuh pada modal
+  const getMonthCalendarDays = (year: number, month: number, completedDates: string[]) => {
+    const firstDayIndex = new Date(year, month, 1).getDay(); // Hari pertama bulan (0: Minggu, 1: Senin, dst)
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    
+    const days = [];
+    // Padding kosong untuk hari sebelum tanggal 1
+    for (let i = 0; i < firstDayIndex; i++) {
+      days.push({ empty: true });
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+      const mStr = String(month + 1).padStart(2, '0');
+      const dStr = String(day).padStart(2, '0');
+      const dateStr = `${year}-${mStr}-${dStr}`;
+      const isChecked = completedDates.includes(dateStr);
+      const isToday = dateStr === todayStr;
+
+      days.push({ empty: false, day, dateStr, isChecked, isToday });
+    }
+
+    return days;
+  };
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#fcfaf7', color: '#292524', padding: '24px 16px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif' }}>
@@ -663,7 +721,7 @@ export default function Home() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ fontSize: '12px', fontWeight: 600, color: '#78716c', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <BarChart2 size={14} /> Daftar Habit & Riwayat Mingguan
+              <BarChart2 size={14} /> Daftar Habit & Evaluasi Bulanan
             </div>
             {habits.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px', color: '#a8a29e', fontSize: '12px', backgroundColor: '#f4efe6', borderRadius: '16px', border: '1px solid #e6decb' }}>
@@ -673,9 +731,9 @@ export default function Home() {
               habits.map((habit) => {
                 const currentDates = habit.completed_dates || [];
                 const isDoneToday = currentDates.includes(todayStr);
-                const totalSuccess = currentDates.length;
+                const monthStats = getCurrentMonthStats(currentDates);
 
-                // Helper untuk membuat array 7 hari ke belakang
+                // Helper untuk membuat array 7 hari ke belakang (mini grid utama)
                 const getLast7Days = () => {
                   const days = [];
                   for (let i = 6; i >= 0; i--) {
@@ -744,10 +802,29 @@ export default function Home() {
                       </button>
                     </div>
 
+                    {/* STATISTIK BULAN INI & TOMBOL BUKA KALENDER DETAIL */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', padding: '8px 12px', borderRadius: '10px', fontSize: '11px' }}>
+                      <span style={{ color: '#78716c', fontWeight: 500 }}>
+                        Bulan ini: <strong style={{ color: '#166534' }}>{monthStats.countThisMonth}</strong> dari {monthStats.totalElapsed} hari ({monthStats.percentage}%)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveCalendarHabitId(habit.id);
+                          setModalYear(new Date().getFullYear());
+                          setModalMonth(new Date().getMonth());
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#166534', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
+                      >
+                        <Calendar size={13} /> Lihat Kalender Bulan Ini
+                      </button>
+                    </div>
+
+                    {/* MINI GRID 7 HARI TERAKHIR */}
                     <div style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', padding: '10px 12px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#78716c', fontWeight: 600 }}>
                         <span>Riwayat 7 Hari Terakhir (Klik untuk ubah)</span>
-                        <span>Total: {totalSuccess} hari</span>
+                        <span>Total sukses: {currentDates.length}</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
                         {pastDays.map((item) => {
@@ -788,6 +865,137 @@ export default function Home() {
               })
             )}
           </div>
+
+          {/* MODAL KALENDER BULANAN FULL */}
+          {activeCalendarHabitId && (() => {
+            const currentHabit = habits.find((h) => h.id === activeCalendarHabitId);
+            if (!currentHabit) return null;
+
+            const monthNames = [
+              'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+              'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ];
+
+            const calendarDays = getMonthCalendarDays(modalYear, modalMonth, currentHabit.completed_dates || []);
+
+            const prevMonth = () => {
+              if (modalMonth === 0) {
+                setModalMonth(11);
+                setModalYear(modalYear - 1);
+              } else {
+                setModalMonth(modalMonth - 1);
+              }
+            };
+
+            const nextMonth = () => {
+              if (modalMonth === 11) {
+                setModalMonth(0);
+                setModalYear(modalYear + 1);
+              } else {
+                setModalMonth(modalMonth + 1);
+              }
+            };
+
+            const toggleHabitDateModal = async (targetDateStr: string) => {
+              const currentDates = currentHabit.completed_dates || [];
+              const isCheckedOnTarget = currentDates.includes(targetDateStr);
+              let updatedDates: string[];
+              
+              if (isCheckedOnTarget) {
+                updatedDates = currentDates.filter((d) => d !== targetDateStr);
+              } else {
+                updatedDates = [...currentDates, targetDateStr];
+                if (targetDateStr === todayStr) {
+                  confetti({ particleCount: 70, spread: 50, origin: { y: 0.6 }, colors: ['#166534', '#22c55e', '#84cc16'] });
+                }
+              }
+
+              const { error } = await supabase
+                .from('habits')
+                .update({ completed_dates: updatedDates })
+                .eq('id', currentHabit.id);
+
+              if (!error) fetchHabits();
+            };
+
+            return (
+              <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 50 }}>
+                <div style={{ backgroundColor: '#fcfaf7', border: '1px solid #e6decb', borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                  
+                  {/* Header Modal */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h3 style={{ fontSize: '15px', fontWeight: 'bold', margin: 0, color: '#292524' }}>{currentHabit.title}</h3>
+                      <span style={{ fontSize: '11px', color: '#78716c' }}>Kalender Detail Evaluasi Bulanan</span>
+                    </div>
+                    <button onClick={() => setActiveCalendarHabitId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#78716c' }}>
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  {/* Navigasi Bulan / Tahun */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f4efe6', padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2d9c4' }}>
+                    <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#57534e', display: 'flex', alignItems: 'center' }}>
+                      <ChevronLeft size={18} />
+                    </button>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#44403c' }}>
+                      {monthNames[modalMonth]} {modalYear}
+                    </span>
+                    <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#57534e', display: 'flex', alignItems: 'center' }}>
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+
+                  {/* Header Nama Hari */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontSize: '10px', fontWeight: 'bold', color: '#78716c' }}>
+                    <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
+                  </div>
+
+                  {/* Grid Tanggal Sebulan Penuh */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+                    {calendarDays.map((item, idx) => {
+                      if (item.empty) {
+                        return <div key={`empty-${idx}`} />;
+                      }
+
+                      return (
+                        <button
+                          key={item.dateStr}
+                          type="button"
+                          onClick={() => toggleHabitDateModal(item.dateStr!)}
+                          title={`Klik untuk ubah tanggal ${item.dateStr}`}
+                          style={{
+                            aspectRatio: '1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '8px',
+                            border: '1px solid',
+                            cursor: 'pointer',
+                            backgroundColor: item.isChecked ? '#166534' : '#f4efe6',
+                            borderColor: item.isChecked ? '#166534' : item.isToday ? '#b45309' : '#e2d9c4',
+                            color: item.isChecked ? '#ffffff' : '#292524',
+                            fontSize: '12px',
+                            fontWeight: item.isToday ? 'bold' : 'normal'
+                          }}
+                        >
+                          {item.day}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Tombol Tutup */}
+                  <button
+                    onClick={() => setActiveCalendarHabitId(null)}
+                    style={{ backgroundColor: '#292524', color: '#f5f5f4', padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer', marginTop: '4px' }}
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
         </>
       )}
     </main>
