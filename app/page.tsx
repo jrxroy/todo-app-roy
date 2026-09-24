@@ -355,7 +355,7 @@ export default function Home() {
               <Compass size={16} />
             </span>
             <h1 style={{ fontSize: '22px', fontWeight: 'bold', letterSpacing: '-0.025em', margin: 0 }}>
-              To do List Roy
+              To do List & Habbit Tracker Roy
             </h1>
           </div>
           <p style={{ fontSize: '12px', color: '#78716c', fontWeight: 500, margin: 0 }}>Pekerjaan, Side Hustle & Fokus Pribadi</p>
