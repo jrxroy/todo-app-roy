@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Plus, CheckCircle2, Circle, Trash2, CheckSquare, Flame, BookOpen, Lightbulb } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, CheckSquare, Flame, BookOpen, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { HabitView } from './components/HabitWorkspaceComp';
+import { HabitCalendarView } from './components/HabitCalendarView';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -13,9 +13,9 @@ const supabase = createClient(
 
 interface Subtask { id: string; title: string; is_completed: boolean; }
 interface Todo { id: string; title: string; frequency: 'daily' | 'weekly' | 'monthly'; priority: 'low' | 'medium' | 'high'; category: string; is_completed: boolean; due_date: string; subtasks: Subtask[]; }
-interface Habit { id: string; title: string; category: string; frequency_type: 'daily' | 'weekly' | 'monthly'; completed_dates: string[]; }
-interface WorkspaceItem { id: string; title: string; description: string; link: string; category: string; created_at: string; }
-interface JournalItem { id: string; date: string; content: string; created_at: string; }
+interface Habit { id: string; title: string; category: string; frequency_type: 'weekly'; completed_week: boolean[]; }
+interface WorkspaceItem { id: string; title: string; description: string; link: string; category: string; }
+interface JournalItem { id: string; date: string; content: string; }
 
 export default function Home() {
   const [mainTab, setMainTab] = useState<'todo' | 'habit' | 'workspace' | 'journal'>('todo');
@@ -29,8 +29,9 @@ export default function Home() {
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [category, setCategory] = useState<string>('Pribadi');
   const [dueDate, setDueDate] = useState('');
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [expandedTodoId, setExpandedTodoId] = useState<string | null>(null);
 
   const [habits, setHabits] = useState<Habit[]>([]);
   const [habitTitle, setHabitTitle] = useState('');
@@ -38,6 +39,7 @@ export default function Home() {
   const [workspaces, setWorkspaces] = useState<WorkspaceItem[]>([]);
   const [wsTitle, setWsTitle] = useState('');
   const [wsDesc, setWsDesc] = useState('');
+  const [wsLink, setWsLink] = useState('');
 
   const [journals, setJournals] = useState<JournalItem[]>([]);
   const [journalDate, setJournalDate] = useState('');
@@ -73,12 +75,20 @@ export default function Home() {
     if (data) setJournals(data);
   };
 
+  const addSubtask = () => {
+    if (!newSubtaskTitle.trim()) return;
+    setSubtasks([...subtasks, { id: Date.now().toString(), title: newSubtaskTitle.trim(), is_completed: false }]);
+    setNewSubtaskTitle('');
+  };
+
+  const removeSubtask = (id: string) => {
+    setSubtasks(subtasks.filter(s => s.id !== id));
+  };
+
   const addTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    setLoading(true);
-    await supabase.from('todos').insert([{ title: title.trim(), frequency: activeTab, priority, category, due_date: dueDate || null, subtasks }]);
-    setLoading(false);
+    await supabase.from('todos').insert([{ title: title.trim(), frequency: activeTab, priority, category, due_date: dueDate || null, subtasks, is_completed: false }]);
     setTitle(''); setDueDate(''); setSubtasks([]); fetchTodos();
   };
 
@@ -96,16 +106,17 @@ export default function Home() {
   const addHabit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!habitTitle.trim()) return;
-    await supabase.from('habits').insert([{ title: habitTitle.trim(), category: 'Pribadi', frequency_type: 'daily', completed_dates: [] }]);
+    await supabase.from('habits').insert([{ title: habitTitle.trim(), category: 'Pribadi', frequency_type: 'weekly', completed_week: [false, false, false, false, false, false, false] }]);
     setHabitTitle(''); fetchHabits();
   };
 
-  const toggleHabitToday = async (habit: Habit) => {
-    const currentDates = habit.completed_dates || [];
-    const isDone = currentDates.includes(todayStr);
-    const updated = isDone ? currentDates.filter(d => d !== todayStr) : [...currentDates, todayStr];
-    if (!isDone) confetti({ particleCount: 60, spread: 50 });
-    await supabase.from('habits').update({ completed_dates: updated }).eq('id', habit.id);
+  const toggleHabitDay = async (habitId: string, dayIndex: number) => {
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return;
+    const currentWeek = [...(habit.completed_week || [false, false, false, false, false, false, false])];
+    currentWeek[dayIndex] = !currentWeek[dayIndex];
+    if (currentWeek[dayIndex]) confetti({ particleCount: 50, spread: 40 });
+    await supabase.from('habits').update({ completed_week: currentWeek }).eq('id', habitId);
     fetchHabits();
   };
 
@@ -117,8 +128,8 @@ export default function Home() {
   const addWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!wsTitle.trim()) return;
-    await supabase.from('workspaces').insert([{ title: wsTitle.trim(), description: wsDesc.trim(), link: '', category: 'Side Hustle' }]);
-    setWsTitle(''); setWsDesc(''); fetchWorkspaces();
+    await supabase.from('workspaces').insert([{ title: wsTitle.trim(), description: wsDesc.trim(), link: wsLink.trim(), category: 'Side Hustle' }]);
+    setWsTitle(''); setWsDesc(''); setWsLink(''); fetchWorkspaces();
   };
 
   const addJournal = async (e: React.FormEvent) => {
@@ -169,7 +180,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
             {(['daily', 'weekly', 'monthly'] as const).map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '10px', fontSize: '12px', fontWeight: 'bold', borderRadius: '12px', border: 'none', cursor: 'pointer', backgroundColor: activeTab === tab ? '#292524' : '#f4efe6', color: activeTab === tab ? '#f5f5f4' : '#78716c' }}>
                 {tab === 'daily' ? 'Harian' : tab === 'weekly' ? 'Mingguan' : 'Bulanan'}
@@ -177,42 +188,88 @@ export default function Home() {
             ))}
           </div>
 
+          <input type="text" placeholder="Cari tugas..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '12px', border: '1px solid #e6decb', backgroundColor: '#f4efe6', marginBottom: '16px', outline: 'none', fontSize: '13px' }} />
+
           <form onSubmit={addTodo} style={{ backgroundColor: '#f4efe6', border: '1px solid #e6decb', padding: '20px', borderRadius: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Tambah tugas baru..." style={{ backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '12px', padding: '12px', fontSize: '14px', outline: 'none' }} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <select value={category} onChange={e => setCategory(e.target.value)} style={{ padding: '10px', borderRadius: '12px', border: '1px solid #e2d9c4', background: '#fcfaf7' }}>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+              <select value={category} onChange={e => setCategory(e.target.value)} style={{ padding: '10px', borderRadius: '12px', border: '1px solid #e2d9c4', background: '#fcfaf7', fontSize: '12px' }}>
                 <option value="Pribadi">Pribadi</option>
                 <option value="Pekerjaan">Pekerjaan</option>
                 <option value="Side Hustle">Side Hustle</option>
               </select>
-              <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ padding: '9px', borderRadius: '12px', border: '1px solid #e2d9c4', background: '#fcfaf7' }} />
+              <select value={priority} onChange={e => setPriority(e.target.value as any)} style={{ padding: '10px', borderRadius: '12px', border: '1px solid #e2d9c4', background: '#fcfaf7', fontSize: '12px' }}>
+                <option value="low">Rendah</option>
+                <option value="medium">Sedang</option>
+                <option value="high">Tinggi</option>
+              </select>
+              <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ padding: '8px', borderRadius: '12px', border: '1px solid #e2d9c4', background: '#fcfaf7', fontSize: '11px' }} />
             </div>
+
+            {/* Subtasks Builder Form */}
+            <div style={{ borderTop: '1px solid #e6decb', paddingTop: '10px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#78716c', display: 'block', marginBottom: '6px' }}>Sub-tugas Detail</label>
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                <input type="text" value={newSubtaskTitle} onChange={e => setNewSubtaskTitle(e.target.value)} placeholder="Tambah langkah kecil..." style={{ flex: 1, backgroundColor: '#fcfaf7', border: '1px solid #e2d9c4', borderRadius: '10px', padding: '8px', fontSize: '12px', outline: 'none' }} />
+                <button type="button" onClick={addSubtask} style={{ backgroundColor: '#e9e2d0', border: 'none', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Tambah</button>
+              </div>
+              {subtasks.map(s => (
+                <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', background: '#fcfaf7', padding: '4px 8px', borderRadius: '8px', marginBottom: '4px' }}>
+                  <span>- {s.title}</span>
+                  <button type="button" onClick={() => removeSubtask(s.id)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Trash2 size={12} /></button>
+                </div>
+              ))}
+            </div>
+
             <button type="submit" style={{ width: '100%', backgroundColor: '#292524', color: '#f5f5f4', padding: '12px', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>Simpan Tugas</button>
           </form>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {filteredTodos.map(todo => (
-              <div key={todo.id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e6decb', backgroundColor: '#f4efe6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div onClick={() => toggleTodo(todo.id, todo.is_completed)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                  {todo.is_completed ? <CheckCircle2 color="#78716c" size={20} /> : <Circle color="#a8a29e" size={20} />}
-                  <span style={{ fontSize: '14px', fontWeight: 600, textDecoration: todo.is_completed ? 'line-through' : 'none' }}>{todo.title}</span>
+            {filteredTodos.map(todo => {
+              const isExpanded = expandedTodoId === todo.id;
+              return (
+                <div key={todo.id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e6decb', backgroundColor: '#f4efe6' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div onClick={() => toggleTodo(todo.id, todo.is_completed)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flex: 1 }}>
+                      {todo.is_completed ? <CheckCircle2 color="#78716c" size={20} /> : <Circle color="#a8a29e" size={20} />}
+                      <span style={{ fontSize: '14px', fontWeight: 600, textDecoration: todo.is_completed ? 'line-through' : 'none' }}>{todo.title}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {todo.subtasks && todo.subtasks.length > 0 && (
+                        <button onClick={() => setExpandedTodoId(isExpanded ? null : todo.id)} style={{ background: 'none', border: 'none', color: '#78716c', cursor: 'pointer' }}>
+                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                      )}
+                      <button onClick={() => deleteTodo(todo.id)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                    </div>
+                  </div>
+
+                  {isExpanded && todo.subtasks && todo.subtasks.length > 0 && (
+                    <div style={{ marginTop: '10px', paddingLeft: '30px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {todo.subtasks.map(sub => (
+                        <div key={sub.id} style={{ fontSize: '12px', color: '#57534e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ width: '4px', height: '4px', backgroundColor: '#78716c', borderRadius: '50%' }}></span>
+                          {sub.title}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => deleteTodo(todo.id)} style={{ background: 'none', border: 'none', color: '#a8a29e', cursor: 'pointer' }}><Trash2 size={16} /></button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
 
       {mainTab === 'habit' && (
-        <HabitView 
+        <HabitCalendarView 
           habits={habits}
           addHabit={addHabit}
           habitTitle={habitTitle}
           setHabitTitle={setHabitTitle}
-          toggleHabitToday={toggleHabitToday}
+          toggleHabitDay={toggleHabitDay}
           deleteHabit={deleteHabit}
-          todayStr={todayStr}
         />
       )}
 
